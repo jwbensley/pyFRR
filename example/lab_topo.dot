@@ -1,0 +1,23 @@
+digraph "level-2" {
+  graph [rankdir=LR];
+  node [fontsize=9];
+  edge [fontsize=6];
+  "xrv9k-1" [label="\N\n192.0.2.1"];
+  "xrv9k-2" [label="\N\n192.0.2.2"];
+  "e3" [label="\N\n192.0.2.3"];
+  "e4" [label="\N\n192.0.2.4"];
+  "j5" [label="\N\n192.0.2.5"];
+  "j6" [label="\N\n192.0.2.6"];
+  "xrv9k-1" -- "xrv9k-2"  [label=1, weight=1];
+  "xrv9k-2" -- "xrv9k-1"  [label=1, weight=1];
+  "xrv9k-2" -- "e3"  [label=10, weight=10];
+  "e3" -- "xrv9k-2"  [label=10, weight=10];
+  "e3" -- "e4"  [label=10, weight=10];
+  "e4" -- "e3"  [label=10, weight=10];
+  "e4" -- "j5"  [label=10, weight=10];
+  "j5" -- "e4"  [label=10, weight=10];
+  "j5" -- "j6"  [label=10, weight=10];
+  "j6" -- "j5"  [label=10, weight=10];
+  "j6" -- "xrv9k-1"  [label=10, weight=10];
+  "xrv9k-1" -- "j6"  [label=10, weight=10];
+}

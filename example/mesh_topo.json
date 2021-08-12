@@ -1,0 +1,29 @@
+{
+    "nodes": [
+    {"id": "P1"},
+    {"id": "P2"},
+    {"id": "P3"},
+    {"id": "P4"},
+    {"id": "PE1"},
+    {"id": "PE2"},
+    {"id": "PE3"},
+    {"id": "PE4"},
+    {"id": "PE5"}
+    ],
+    "links": [
+    {"source": "P1", "target": "P2", "weight": 10},
+    {"source": "P2", "target": "P4", "weight": 10},
+    {"source": "P3", "target": "P4", "weight": 10},
+    {"source": "P3", "target": "P1", "weight": 10},
+    {"source": "PE1", "target": "P1", "weight": 10},
+    {"source": "PE1", "target": "P2", "weight": 10},
+    {"source": "PE2", "target": "P3", "weight": 10},
+    {"source": "PE2", "target": "P4", "weight": 10},
+    {"source": "PE3", "target": "P1", "weight": 10},
+    {"source": "PE3", "target": "P3", "weight": 10},
+    {"source": "PE4", "target": "P2", "weight": 10},
+    {"source": "PE4", "target": "P4", "weight": 10},
+    {"source": "PE5", "target": "P2", "weight": 10},
+    {"source": "PE5", "target": "P4", "weight": 10}
+    ]
+}

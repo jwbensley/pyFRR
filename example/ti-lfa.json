@@ -1,0 +1,24 @@
+{
+    "nodes": [
+    {"id": "PE1", "node_sid": 2001},
+    {"id": "PE2", "node_sid": 2002},
+    {"id": "PE3", "node_sid": 2003},
+    {"id": "PE4", "node_sid": 2004},
+    {"id": "P1", "node_sid": 1001},
+    {"id": "P2", "node_sid": 1002},
+    {"id": "P3", "node_sid": 1003},
+    {"id": "P4", "node_sid": 1004}
+    ],
+    "links": [
+    {"source": "PE1", "target": "P1", "weight": 10, "adj_sid": 4011},
+    {"source": "PE1", "target": "PE2", "weight": 50, "adj_sid": 4012},
+    {"source": "PE2", "target": "P2", "weight": 10, "adj_sid": 4022},
+    {"source": "P1", "target": "P2", "weight": 10, "adj_sid": 3012},
+    {"source": "P1", "target": "P3", "weight": 40, "adj_sid": 3013},
+    {"source": "P1", "target": "P4", "weight": 20, "adj_sid": 3013},
+    {"source": "P2", "target": "P4", "weight": 40, "adj_sid": 3024},
+    {"source": "P4", "target": "P3", "weight": 50, "adj_sid": 3043},
+    {"source": "P4", "target": "PE4", "weight": 10, "adj_sid": 4044},
+    {"source": "P3", "target": "PE3", "weight": 10, "adj_sid": 4033}
+    ]
+}
