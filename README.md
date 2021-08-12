@@ -40,17 +40,17 @@ Optionally one can install the module and its prerequisites in a virtual environ
 
 ```bash
 ~$ cd /tmp
-/tmp$ git clone https://github.com/jwbensley/ip-frr.git
-/tmp$ cd ip-frr
-/tmp/ip-frr$ virtualenv ip-frr
-/tmp/ip-frr$ source ip-frr/bin/activate
-(ip-frr) /tmp/ip-frr$ pip3 install networkx pydot
-(ip-frr) /tmp/ip-frr$ sudo apt-get install graphviz
+/tmp$ git clone https://github.com/jwbensley/pyfrr.git
+/tmp$ cd pyfrr
+/tmp/pyfrr$ virtualenv pyfrr
+/tmp/pyfrr$ source pyfrr/bin/activate
+(pyfrr) /tmp/pyfrr$ pip3 install networkx pydot
+(pyfrr) /tmp/pyfrr$ sudo apt-get install graphviz
 ```
 
 Then simply run the example script which will load an example topology, generate all rLFA paths and then generate diagrams of them all:
 ```bash
-(ip-frr) /tmp/ip-frr$ ./example/example.py --topology example/mesh_topo.json --type json --rlfa --diagram
+(pyfrr) /tmp/pyfrr$ ./example/example.py --topology example/mesh_topo.json --type json --rlfa --diagram
 Rendered rLFA path diagrams to ./diagrams/mesh_topo/2021-05-13--07-34-29-845195
 ```
 
