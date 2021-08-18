@@ -26,6 +26,52 @@ class tilfa:
         self.spf = spf(debug=0)
         ###self.trombone = trombone
 
+    def check_sids(self, graph):
+        """
+        Check that each node has a node SID and that each adjacency has an 
+        adjacency SID, and they they are valid and unique.
+
+        :param networkx.Graph graph: NetworkX graph object
+        :return bool True: True if all SIDs are present and unique, else false
+        :rtype: bool
+        """
+
+        node_sids = []
+        for node in graph.nodes():
+            if "node_sid" not in graph.nodes[node]:
+                raise Exception(
+                    f"Node {node} is missing a node SID, can't run TI-LFA"
+                )
+            if type(graph.nodes[node]["node_sid"]) != int:
+                raise Exception(
+                    f"Node {node} node SID is not an int, can't run TI-LFA"
+                )
+            node_sids.append(graph.nodes[node]["node_sid"])
+
+        if len(set(node_sids)) < len(node_sids):
+            raise Exception(
+                "Nodes found with non-unique node SIDs: "
+                f"{[sid for sid in node_sids if node_sids.count(sid) > 1]}"
+            )
+
+        adj_sids = []
+        for edge in graph.edges():
+            if "adj_sid" not in graph.edges[edge]:
+                raise Exception(
+                    f"Link {edge} is missing an adjacency SID, can't run TI-LFA"
+                )
+            if type(graph.edges[edge]["adj_sid"]) != int:
+                raise Exception(
+                    f"Link {edge} adjacency SID is not an int, can't run TI-LFA"
+                )
+            adj_sids.append(graph.edges[edge]["adj_sid"])
+
+        if len(set(adj_sids)) < len(adj_sids):
+            raise Exception(
+                "Links found with non-unique adjacency SIDs: "
+                f"{[sid for sid in adj_sids if adj_sids.count(sid) > 1]}"
+            )
+
     def draw(self, graph, outdir, topology):
         """
         Loop over the generated topologies and render them as diagram files.

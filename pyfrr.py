@@ -100,8 +100,8 @@ class pyfrr:
     def check_topo(self):
         """
         If the graph has changed (nodes were added or removed) since this
-        function was last run, whipe out all existing data, it is no longer
-        valid.
+        function was last run (or it is the first run), whipe out all existing
+        data because it is no longer valid.
 
         :return None:
         :rtype: None
@@ -350,6 +350,7 @@ class pyfrr:
         """
 
         self.check_topo()
+        self.tilfa.check_sids(self.graph)
 
         #self.tilfa.init_topo(self.graph, self.topo)
         #tilfas = self.tilfa.gen_metric_paths("P1", self.graph, "PE1")
