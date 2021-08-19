@@ -335,7 +335,7 @@ class pyfrr:
                 """
                 self.spf.init_topo(self.graph, self.topo)
 
-                self.topo[src][dst]["cost"] = self.spf.gen_metric_paths(
+                self.topo[src][dst]["spf_metric"] = self.spf.gen_metric_paths(
                     dst, self.graph, src
                 )
 
@@ -363,8 +363,8 @@ class pyfrr:
                     continue
 
                 ###################
-                if (src != "PE1" or dst != "P2"):
-                    continue
+                #if (src != "PE1" or dst != "P2"):
+                #    continue
 
                 """
                 Whipe out any existing path data incase links/edges were added

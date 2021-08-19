@@ -49,7 +49,7 @@ class rlfa:
                     frr_graph = graph.copy()
 
                     # Highlight the failed first-hop link(s) as red
-                    for path in topology[src][dst]["cost"]:
+                    for path in topology[src][dst]["spf_metric"]:
                         frr_graph = self.diagram.highlight_fh_link(
                             "red",
                             frr_graph,
@@ -58,7 +58,7 @@ class rlfa:
 
                     # Highlight the failed first-hop node(s) as red
                     if path_type == "rlfas_node":
-                        for path in topology[src][dst]["cost"]:
+                        for path in topology[src][dst]["spf_metric"]:
                             frr_graph = self.diagram.highlight_fh_node(
                                 "red",
                                 frr_graph,

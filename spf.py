@@ -16,7 +16,7 @@ class spf:
         """
         self.debug = debug
         self.diagram = Diagram(debug=self.debug)
-        self.path_types = ["cost"]
+        self.path_types = ["spf_metric"]
 
     def draw(self, graph, outdir, topology):
         """

@@ -90,70 +90,71 @@ class tilfa:
         ]:
 
             for path_type in self.path_types:
-                ####################print(f"path_type: {path_type}")
                 if path_type not in topology[src][dst]:
                     continue
 
-                if len(topology[src][dst][path_type]) > 0:
-                    tilfa_graph = graph.copy()
+                if len(topology[src][dst][path_type]) < 1:
+                    continue
 
-                    print(topology[src][dst][path_type])
+                tilfa_graph = graph.copy()
 
-                    # Highlight the failed first-hop link as red
-                    for path in topology[src][dst]["cost"]:
-                        tilfa_graph = self.diagram.highlight_fh_link(
+                print(f"draw paths: {topology[src][dst][path_type]}") ###############
+
+                # Highlight the failed first-hop link as red
+                print(f"spf_metric: {topology[src][dst]['spf_metric']}") ##########
+                for path in topology[src][dst]["spf_metric"]:
+                    tilfa_graph = self.diagram.highlight_fh_link(
+                        "red",
+                        tilfa_graph,
+                        path,
+                    )
+
+                # Highlight the failed first-hop node(s) as red
+                if path_type == "tilfas_node":
+                    for path in topology[src][dst]["spf_metric"]:
+                        tilfa_graph = self.diagram.highlight_fh_node(
                             "red",
                             tilfa_graph,
                             path,
                         )
 
-                    # Highlight the failed first-hop node(s) as red
-                    if path_type == "tilfas_node":
-                        for path in topology[src][dst]["cost"]:
-                            tilfa_graph = self.diagram.highlight_fh_node(
-                                "red",
-                                tilfa_graph,
-                                path,
-                            )
+                for tilfa in topology[src][dst][path_type]:
+                    # Highlight the path(s) from src to the PQ node(s)
+                    for s_p_path in tilfa[0]:
+                        print(f"s_p_path: {s_p_path}")
+                        tilfa_graph = self.diagram.highlight_links(
+                            "purple", tilfa_graph, s_p_path
+                        )
+                        tilfa_graph = self.diagram.highlight_nodes(
+                            "purple", tilfa_graph, s_p_path
+                        )
+                    # Highlight the path(s) from the PQ node(s) to dst
+                    for q_d_path in tilfa[1]:
+                        print(f"q_d_path: {q_d_path}")
+                        tilfa_graph = self.diagram.highlight_links(
+                            "green", tilfa_graph, q_d_path
+                        )
+                        tilfa_graph = self.diagram.highlight_nodes(
+                            "green", tilfa_graph, q_d_path ################## list of lists!
+                        )
 
-                    for tilfa in topology[src][dst][path_type]:
-                        ##################print(f"tilfa type: {tilfa}")
-                        # Highlight the path(s) from src to the PQ node(s)
-                        for s_p_path in tilfa[0]:
-                            print(s_p_path)
-                            tilfa_graph = self.diagram.highlight_links(
-                                "purple", tilfa_graph, s_p_path
-                            )
-                            tilfa_graph = self.diagram.highlight_nodes(
-                                "purple", tilfa_graph, s_p_path
-                            )
-                        # Highlight the path(s) from the PQ node(s) to dst
-                        for q_d_path in tilfa[1]:
-                            print(q_d_path)
-                            tilfa_graph = self.diagram.highlight_links(
-                                "green", tilfa_graph, q_d_path
-                            )
-                            tilfa_graph = self.diagram.highlight_nodes(
-                                "green", tilfa_graph, q_d_path[0] ################## list of lists!
-                            )
+                tilfa_graph = self.diagram.highlight_src_dst(
+                    "lightblue", dst, tilfa_graph, src
+                )
+                # Add labels to links showing their cost
+                tilfa_graph = self.diagram.label_link_weights(tilfa_graph)
+                tilfa_graph = self.diagram.label_link_add_adjsid(tilfa_graph)
+                tilfa_graph = self.diagram.label_node_id(tilfa_graph)
+                tilfa_graph = self.diagram.label_node_add_nodesid(tilfa_graph)
+                ##################################################################### TODO Add Adj-SIDs
+                ##################################################################### TODO Add Node SIDs
+                # Stored in tilfa[2]
 
-                    tilfa_graph = self.diagram.highlight_src_dst(
-                        "lightblue", dst, tilfa_graph, src
-                    )
-                    # Add labels to links showing their cost
-                    tilfa_graph = self.diagram.label_link_weights(tilfa_graph)
-                    tilfa_graph = self.diagram.label_link_add_adjsid(tilfa_graph)
-                    tilfa_graph = self.diagram.label_node_id(tilfa_graph)
-                    tilfa_graph = self.diagram.label_node_add_nodesid(tilfa_graph)
-                    ##################################################################### TODO Add Adj-SIDs
-                    ##################################################################### TODO Add Node SIDs
-                    # Stored in tilfa[2]
-
-                    self.diagram.gen_diagram(
-                        (src + "_" + dst + "_" + path_type),
-                        tilfa_graph,
-                        os.path.join(outdir, src, path_type),
-                    )
+                self.diagram.gen_diagram(
+                    (src + "_" + dst + "_" + path_type),
+                    tilfa_graph,
+                    os.path.join(outdir, src, path_type),
+                )
 
     def gen_ep_space(self, dst, f_type, graph, src):
         """
@@ -217,7 +218,7 @@ class tilfa:
                 if overlap:
                     if self.debug > 1:
                         print(
-                            f"Skipping link EP-space node {p_node} due "
+                            f"Skipping link EP-space node {ep_node} due "
                             f"to overlap:\n"
                             f"{s_ep_links}\n"
                             f"{s_d_fh_links}"
@@ -448,7 +449,7 @@ class tilfa:
                     lfa_cost = cost
                     lfa_paths = [
                         (
-                            [[src, nei]],
+                            [src, nei],
                             [n_d_paths],
                             [[]]
                         )
@@ -743,11 +744,6 @@ class tilfa:
                 print(f"link_p_space: {link_p_space}")
                 print(f"node_p_space: {node_p_space}")
         
-        #self.debug = 2 ########################
-        print(f"link_ep_space: {link_ep_space}")
-        link_p_space = self.gen_link_p_space(dst, graph, src) ##############
-        print(f"link_p_space {link_p_space}") ##########################
-
         link_q_space = self.gen_link_q_space(dst, graph, src)
         node_q_space = self.gen_node_q_space(dst, graph, src)
         if self.debug > 0:
