@@ -352,19 +352,10 @@ class pyfrr:
         self.check_topo()
         self.tilfa.check_sids(self.graph)
 
-        #self.tilfa.init_topo(self.graph, self.topo)
-        #tilfas = self.tilfa.gen_metric_paths("P1", self.graph, "PE1")
-        #self.topo["PE1"]["P1"].update(tilfas)
-        #return ##########################################################
-
         for src in self.graph.nodes:
             for dst in self.graph.nodes:
                 if dst == src:
                     continue
-
-                ###################
-                #if (src != "PE1" or dst != "P2"):
-                #    continue
 
                 """
                 Whipe out any existing path data incase links/edges were added
@@ -374,7 +365,6 @@ class pyfrr:
 
                 tilfas = self.tilfa.gen_metric_paths(dst, self.graph, src)
                 self.topo[src][dst].update(tilfas)
-            return #############################################################
 
     def get_paths(self, dst=None, src=None):
         """

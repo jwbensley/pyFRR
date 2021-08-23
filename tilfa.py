@@ -135,7 +135,7 @@ class tilfa:
                             "green", tilfa_graph, q_d_path
                         )
                         tilfa_graph = self.diagram.highlight_nodes(
-                            "green", tilfa_graph, q_d_path ################## list of lists!
+                            "green", tilfa_graph, q_d_path
                         )
 
                 tilfa_graph = self.diagram.highlight_src_dst(
@@ -220,8 +220,8 @@ class tilfa:
                         print(
                             f"Skipping link EP-space node {ep_node} due "
                             f"to overlap:\n"
-                            f"{s_ep_links}\n"
-                            f"{s_d_fh_links}"
+                            f"{s_ep_links},{ep_node}\n"
+                            f"{s_d_fh_links},{dst}"
                         )
                     continue
 
@@ -286,8 +286,8 @@ class tilfa:
                     print(
                         f"Skipping link protecting P-space node {p_node} due "
                         f"to overlap:\n"
-                        f"{s_p_links}\n"
-                        f"{s_d_fh_links}"
+                        f"{s_p_links},{p_node}\n"
+                        f"{s_d_fh_links},{dst}"
                     )
                 continue
 
@@ -336,8 +336,7 @@ class tilfa:
         # Re-calculate the path(s) to D in the failure state (post-convergence)
         post_s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=src)
         for post_s_d_path in post_s_d_paths:
-            for q_node in link_q_space:
-                ###################################################### TO DO: Do we need to skip "src" here?
+            for q_node in link_q_space: # Q-space doesn't include src or dst
                 if q_node in post_s_d_path:
                     link_pq_space.append(q_node)
 
@@ -436,11 +435,35 @@ class tilfa:
         """
         for nei in graph.neighbors(src):
             if nei in link_pq_space:
+
+                """                
+                Check that the neighbour/pq-node isn't reached via the same
+                failed fist hop link(s) toward dst:
+                """
+                pre_s_pq_paths = self.spf.gen_metric_paths(dst=nei, graph=graph, src=src)
+                pre_s_pq_fh_links = [(src, path[1]) for path in pre_s_pq_paths]
+
+                pre_s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+                pre_s_d_fh_links = [(src, path[1]) for path in pre_s_d_paths]
+                
+                overlap = [
+                    fh_link for fh_link in pre_s_d_fh_links if fh_link in pre_s_pq_fh_links
+                ]
+                if overlap:
+                    if self.debug > 1:
+                        print(
+                            f"Skipping directly connected neighbour {nei} due "
+                            f"to overlap:\n"
+                            f"{pre_s_pq_fh_links},{nei}\n"
+                            f"{pre_s_d_fh_links},{dst}"
+                        )
+                    continue
                 if self.debug > 1:
                     print(
                         f"Directly connected neighbour {nei} is link "
                         f"protecting from {src} to {dst}"
                     )
+
                 n_d_paths = self.spf.gen_metric_paths(
                     dst=dst, graph=graph, src=nei
                 )
@@ -449,8 +472,8 @@ class tilfa:
                     lfa_cost = cost
                     lfa_paths = [
                         (
-                            [src, nei],
-                            [n_d_paths],
+                            [[src, nei]],
+                            n_d_paths,
                             [[]]
                         )
                     ]
@@ -503,8 +526,9 @@ class tilfa:
                     Check if this path has a lower cost from src to dst
                     than the current TI-LFA path(s)
                     """
-                    cost = self.spf.gen_path_cost(tmp_g, [post_s_p_paths[0] + p_d_paths[0][1:]])
+                    cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0] + p_d_paths[0][1:])
                     if cost < lfa_cost or lfa_cost == 0:
+                        print(f"5.2.1: {cost} < {lfa_cost}: {lfa_paths}") ##########################
                         lfa_cost = cost
                         lfa_paths = [
                             (
@@ -513,7 +537,6 @@ class tilfa:
                                 [graph.nodes[p_node]["node_sid"]]
                             )
                         ]
-                        print(f"5.2.1: {lfa_paths}") ##########################
 
                     # If it has the same cost...
                     elif cost == lfa_cost:
@@ -529,7 +552,10 @@ class tilfa:
                         """
                         for tilfa in lfa_paths:
                             if tilfa[0][-1] != post_s_p_paths[0][-1]:
-                                if self.spf.gen_path_cost(tmp_g, post_s_p_paths[0]) < self.spf.gen_path_cost(tmp_g, tilfa[0]): ########## Can any of the paths to p_node be different cost?
+                                cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0])
+                                this_lfa = self.spf.gen_path_cost(tmp_g, tilfa[0][0]) ########## Can any of the paths to p_node be different cost?
+                                if cost < this_lfa:
+                                    print(f"5.2.2: {cost} < {this_lfa}: {lfa_paths}") ##########################
                                     lfa_paths = [
                                         (
                                             post_s_p_paths,
@@ -537,7 +563,6 @@ class tilfa:
                                             [graph.nodes[p_node]["node_sid"]]
                                         )
                                     ]
-                                    print(f"5.2.2: {lfa_paths}") ##########################
                                     break
                         
                         # Else it's an ECMP path with the same cost to p_node
