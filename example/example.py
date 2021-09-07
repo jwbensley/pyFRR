@@ -147,7 +147,7 @@ def pprint_lfas(f):
 
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.lfa.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 if f.topo[src][dst][path_type]:
                     print(f.topo[src][dst][path_type])
@@ -162,7 +162,7 @@ def pprint_rlfas(f):
 
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.rlfa.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 paths = []
                 for path in f.topo[src][dst][path_type]:
@@ -179,7 +179,7 @@ def pprint_spf(f):
 
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.spf.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 print(f.topo[src][dst][path_type])
 
@@ -188,10 +188,9 @@ def pprint_tilfas(f):
     """
     Print all the calculated TI-LFA paths.
     """
-    """
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.tilfa.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 paths = []
                 for path in f.topo[src][dst][path_type]:
@@ -199,8 +198,6 @@ def pprint_tilfas(f):
                         for p_d_path in path[1]:
                             paths.append(s_p_path + p_d_path[1:])
                 print(paths)
-    """
-    ##################################################### TODO
 
 def main():
 
@@ -281,10 +278,10 @@ def main():
             print("Failed to initial pyFRR module")
             return
 
-        """
         f.gen_all_metric_spfs()
         f.gen_all_metric_lfas()
         f.gen_all_metric_rlfas()
+        f.gen_all_metric_tilfas()
 
         print("All paths from PE1 to PE2:")
         pp.pprint(f.get_paths(src="PE1", dst="PE2"))
@@ -301,9 +298,6 @@ def main():
         outdir = f.draw_spf("./example_topo_spf_diagrams")
         if outdir:
             print(f"Rendered shortest path diagrams to {outdir}")
-        """
-
-        f.gen_all_metric_tilfas()
 
     sys.exit()
 

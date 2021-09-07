@@ -739,6 +739,16 @@ class tilfa:
         if self.debug > 0:
             print(f"Calculating TI-LFA paths from {src} to {dst}")
 
+        tilfas = {
+            "tilfas_link": [],
+            "tilfas_node": []
+        }
+
+        s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        # There are no paths between this src,dst pair
+        if not s_d_paths:
+            return tilfas
+
         """
         TI-LFA Text:
         5. TI-LFA Repair path

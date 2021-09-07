@@ -8,7 +8,8 @@
     {"id": "P1", "node_sid": 1001},
     {"id": "P2", "node_sid": 1002},
     {"id": "P3", "node_sid": 1003},
-    {"id": "P4", "node_sid": 1004}
+    {"id": "P4", "node_sid": 1004},
+    {"id": "P5", "node_sid": 1005}
     ],
     "links": [
     {"source": "PE1", "target": "P1", "weight": 10, "adj_sid": 4011},

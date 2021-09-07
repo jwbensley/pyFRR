@@ -167,13 +167,22 @@ class rlfa:
         :param str dst: Destination node name in "graph"
         :param networkx.Graph graph: NetworkX graph object
         :param str src: Source node name in "graph"
-        :return rlfa_paths: Dict with list(s) of tuples
+        :return rlfas: Dict with list(s) of tuples
         :rtype: list
         """
 
-        rlfas = {}
+        rlfas = {
+            "rlfas_link": [],
+            "rlfas_node": []
+        }
+        
         if self.debug > 0:
             print(f"Calculating rLFA paths from {src} to {dst}")
+
+        s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        # There are no paths between this src,dst pair
+        if not s_d_paths:
+            return rlfas
 
         if self.ep_space:
             ep_space = self.gen_ep_space(dst, graph, src)
@@ -389,6 +398,9 @@ class rlfa:
         cost S->E->P.
         """
 
+        p_space = []
+
+
         """
         Find the cost of the lowest cost first-hop from all the best paths
         towards dst, and build a list of all first-hops toward dst. When ECMP
@@ -437,7 +449,6 @@ class rlfa:
                     self.spf.gen_metric_cost(dst=p, graph=graph, src=fh)
                 )
 
-        p_space = []
         for p in r_p_costs:
             """
             Because this function is used calcualte both the P-Space for src

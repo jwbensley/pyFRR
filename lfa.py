@@ -107,9 +107,14 @@ class lfa:
         """
 
         lfas = {"lfas_link": [], "lfas_dstream": [], "lfas_node": []}
+
         if self.debug > 0:
             print(f"Calculating for lfa paths from {src} to {dst}")
+        
         s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        # There are no paths between this src,dst pair
+        if not s_d_paths:
+            return lfas
 
         # Loop over each neighbour to check if each one is an lfa candidate
         for nei in graph.neighbors(src):
