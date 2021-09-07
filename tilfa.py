@@ -26,6 +26,52 @@ class tilfa:
         self.spf = spf(debug=0)
         ###self.trombone = trombone
 
+    def check_sids(self, graph):
+        """
+        Check that each node has a node SID and that each adjacency has an 
+        adjacency SID, and they they are valid and unique.
+
+        :param networkx.Graph graph: NetworkX graph object
+        :return bool True: True if all SIDs are present and unique, else false
+        :rtype: bool
+        """
+
+        node_sids = []
+        for node in graph.nodes():
+            if "node_sid" not in graph.nodes[node]:
+                raise Exception(
+                    f"Node {node} is missing a node SID, can't run TI-LFA"
+                )
+            if type(graph.nodes[node]["node_sid"]) != int:
+                raise Exception(
+                    f"Node {node} node SID is not an int, can't run TI-LFA"
+                )
+            node_sids.append(graph.nodes[node]["node_sid"])
+
+        if len(set(node_sids)) < len(node_sids):
+            raise Exception(
+                "Nodes found with non-unique node SIDs: "
+                f"{[sid for sid in node_sids if node_sids.count(sid) > 1]}"
+            )
+
+        adj_sids = []
+        for edge in graph.edges():
+            if "adj_sid" not in graph.edges[edge]:
+                raise Exception(
+                    f"Link {edge} is missing an adjacency SID, can't run TI-LFA"
+                )
+            if type(graph.edges[edge]["adj_sid"]) != int:
+                raise Exception(
+                    f"Link {edge} adjacency SID is not an int, can't run TI-LFA"
+                )
+            adj_sids.append(graph.edges[edge]["adj_sid"])
+
+        if len(set(adj_sids)) < len(adj_sids):
+            raise Exception(
+                "Links found with non-unique adjacency SIDs: "
+                f"{[sid for sid in adj_sids if adj_sids.count(sid) > 1]}"
+            )
+
     def draw(self, graph, outdir, topology):
         """
         Loop over the generated topologies and render them as diagram files.
@@ -44,70 +90,71 @@ class tilfa:
         ]:
 
             for path_type in self.path_types:
-                ####################print(f"path_type: {path_type}")
                 if path_type not in topology[src][dst]:
                     continue
 
-                if len(topology[src][dst][path_type]) > 0:
-                    tilfa_graph = graph.copy()
+                if len(topology[src][dst][path_type]) < 1:
+                    continue
 
-                    print(topology[src][dst][path_type])
+                tilfa_graph = graph.copy()
 
-                    # Highlight the failed first-hop link as red
-                    for path in topology[src][dst]["cost"]:
-                        tilfa_graph = self.diagram.highlight_fh_link(
+                print(f"draw paths: {topology[src][dst][path_type]}") ###############
+
+                # Highlight the failed first-hop link as red
+                print(f"spf_metric: {topology[src][dst]['spf_metric']}") ##########
+                for path in topology[src][dst]["spf_metric"]:
+                    tilfa_graph = self.diagram.highlight_fh_link(
+                        "red",
+                        tilfa_graph,
+                        path,
+                    )
+
+                # Highlight the failed first-hop node(s) as red
+                if path_type == "tilfas_node":
+                    for path in topology[src][dst]["spf_metric"]:
+                        tilfa_graph = self.diagram.highlight_fh_node(
                             "red",
                             tilfa_graph,
                             path,
                         )
 
-                    # Highlight the failed first-hop node(s) as red
-                    if path_type == "tilfas_node":
-                        for path in topology[src][dst]["cost"]:
-                            tilfa_graph = self.diagram.highlight_fh_node(
-                                "red",
-                                tilfa_graph,
-                                path,
-                            )
+                for tilfa in topology[src][dst][path_type]:
+                    # Highlight the path(s) from src to the PQ node(s)
+                    for s_p_path in tilfa[0]:
+                        print(f"s_p_path: {s_p_path}")
+                        tilfa_graph = self.diagram.highlight_links(
+                            "purple", tilfa_graph, s_p_path
+                        )
+                        tilfa_graph = self.diagram.highlight_nodes(
+                            "purple", tilfa_graph, s_p_path
+                        )
+                    # Highlight the path(s) from the PQ node(s) to dst
+                    for q_d_path in tilfa[1]:
+                        print(f"q_d_path: {q_d_path}")
+                        tilfa_graph = self.diagram.highlight_links(
+                            "green", tilfa_graph, q_d_path
+                        )
+                        tilfa_graph = self.diagram.highlight_nodes(
+                            "green", tilfa_graph, q_d_path
+                        )
 
-                    for tilfa in topology[src][dst][path_type]:
-                        ##################print(f"tilfa type: {tilfa}")
-                        # Highlight the path(s) from src to the PQ node(s)
-                        for s_p_path in tilfa[0]:
-                            print(s_p_path)
-                            tilfa_graph = self.diagram.highlight_links(
-                                "purple", tilfa_graph, s_p_path
-                            )
-                            tilfa_graph = self.diagram.highlight_nodes(
-                                "purple", tilfa_graph, s_p_path
-                            )
-                        # Highlight the path(s) from the PQ node(s) to dst
-                        for q_d_path in tilfa[1]:
-                            print(q_d_path)
-                            tilfa_graph = self.diagram.highlight_links(
-                                "green", tilfa_graph, q_d_path
-                            )
-                            tilfa_graph = self.diagram.highlight_nodes(
-                                "green", tilfa_graph, q_d_path
-                            )
+                tilfa_graph = self.diagram.highlight_src_dst(
+                    "lightblue", dst, tilfa_graph, src
+                )
+                # Add labels to links showing their cost
+                tilfa_graph = self.diagram.label_link_weights(tilfa_graph)
+                tilfa_graph = self.diagram.label_link_add_adjsid(tilfa_graph)
+                tilfa_graph = self.diagram.label_node_id(tilfa_graph)
+                tilfa_graph = self.diagram.label_node_add_nodesid(tilfa_graph)
+                ##################################################################### TODO Add Adj-SIDs
+                ##################################################################### TODO Add Node SIDs
+                # Stored in tilfa[2]
 
-                    tilfa_graph = self.diagram.highlight_src_dst(
-                        "lightblue", dst, tilfa_graph, src
-                    )
-                    # Add labels to links showing their cost
-                    tilfa_graph = self.diagram.label_link_weights(tilfa_graph)
-                    tilfa_graph = self.diagram.label_link_add_adjsid(tilfa_graph)
-                    tilfa_graph = self.diagram.label_node_id(tilfa_graph)
-                    tilfa_graph = self.diagram.label_node_add_nodesid(tilfa_graph)
-                    ##################################################################### TODO Add Adj-SIDs
-                    ##################################################################### TODO Add Node SIDs
-                    # Stored in tilfa[2]
-
-                    self.diagram.gen_diagram(
-                        (src + "_" + dst + "_" + path_type),
-                        tilfa_graph,
-                        os.path.join(outdir, src, path_type),
-                    )
+                self.diagram.gen_diagram(
+                    (src + "_" + dst + "_" + path_type),
+                    tilfa_graph,
+                    os.path.join(outdir, src, path_type),
+                )
 
     def gen_ep_space(self, dst, f_type, graph, src):
         """
@@ -145,12 +192,41 @@ class tilfa:
             else:
                 raise Exception(f"Unrecognised EP-space type {f_type}")
 
-            if n_p_space:
-                if src in n_p_space:
-                    n_p_space.remove(src)
-                for node in n_p_space:
-                    if node not in ep_space:
-                        ep_space.append(node)
+            if src in n_p_space:
+                n_p_space.remove(src)
+
+            for ep_node in n_p_space:
+                """
+                Skip EP-nodes which have the pre-failure first-hop link(s) from src
+                to dst in the pre-failure path(s) from src to EP-node:
+                """
+                s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+                s_d_fh_links = [(path[0], path[1]) for path in s_d_paths]
+
+                s_ep_paths = self.spf.gen_metric_paths(
+                    dst=ep_node, graph=graph, src=src
+                )
+                s_ep_links = [
+                    (path[idx], path[idx + 1])
+                    for path in s_ep_paths
+                    for idx in range(0, len(path) - 1)
+                ]
+                
+                overlap = [
+                    link for link in s_ep_links if link in s_d_fh_links
+                ]
+                if overlap:
+                    if self.debug > 1:
+                        print(
+                            f"Skipping link EP-space node {ep_node} due "
+                            f"to overlap:\n"
+                            f"{s_ep_links},{ep_node}\n"
+                            f"{s_d_fh_links},{dst}"
+                        )
+                    continue
+
+                if ep_node not in ep_space:
+                    ep_space.append(ep_node)
 
         return ep_space
 
@@ -175,7 +251,7 @@ class tilfa:
         """
 
         s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
-        s_d_fh_links = [(src, path[1]) for path in s_d_paths]
+        s_d_fh_links = [(path[0], path[1]) for path in s_d_paths]
 
         if self.debug > 1:
             print(
@@ -210,8 +286,8 @@ class tilfa:
                     print(
                         f"Skipping link protecting P-space node {p_node} due "
                         f"to overlap:\n"
-                        f"{s_p_links}\n"
-                        f"{s_d_fh_links}"
+                        f"{s_p_links},{p_node}\n"
+                        f"{s_d_fh_links},{dst}"
                     )
                 continue
 
@@ -252,17 +328,15 @@ class tilfa:
         pre_s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
         pre_s_d_fh_links = [(src, path[1]) for path in pre_s_d_paths]
 
-        # Remove the pre-convergence the first-hop link(s) from the graph
+        # Remove the pre-convergence first-hop link(s) from the graph
         tmp_g = graph.copy()
         for fh_link in pre_s_d_fh_links:
             tmp_g.remove_edge(*fh_link)
 
         # Re-calculate the path(s) to D in the failure state (post-convergence)
         post_s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=src)
-
         for post_s_d_path in post_s_d_paths:
-            for q_node in link_q_space:
-                ###################################################### TO DO: Do we need to skip "src" here?
+            for q_node in link_q_space: # Q-space doesn't include src or dst
                 if q_node in post_s_d_path:
                     link_pq_space.append(q_node)
 
@@ -344,7 +418,7 @@ class tilfa:
 
         self.debug = 2 ##############################################################################
 
-        print("***************************gen_metric_link_tilfas()***************************")
+        print(f"***************************gen_metric_link_tilfas({src}, {dst})***************************")
         tilfa_paths = []
         lfa_cost = 0
         lfa_p_cost = 0
@@ -361,11 +435,35 @@ class tilfa:
         """
         for nei in graph.neighbors(src):
             if nei in link_pq_space:
+
+                """                
+                Check that the neighbour/pq-node isn't reached via the same
+                failed fist hop link(s) toward dst:
+                """
+                pre_s_pq_paths = self.spf.gen_metric_paths(dst=nei, graph=graph, src=src)
+                pre_s_pq_fh_links = [(src, path[1]) for path in pre_s_pq_paths]
+
+                pre_s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+                pre_s_d_fh_links = [(src, path[1]) for path in pre_s_d_paths]
+                
+                overlap = [
+                    fh_link for fh_link in pre_s_d_fh_links if fh_link in pre_s_pq_fh_links
+                ]
+                if overlap:
+                    if self.debug > 1:
+                        print(
+                            f"Skipping directly connected neighbour {nei} due "
+                            f"to overlap:\n"
+                            f"{pre_s_pq_fh_links},{nei}\n"
+                            f"{pre_s_d_fh_links},{dst}"
+                        )
+                    continue
                 if self.debug > 1:
                     print(
                         f"Directly connected neighbour {nei} is link "
                         f"protecting from {src} to {dst}"
                     )
+
                 n_d_paths = self.spf.gen_metric_paths(
                     dst=dst, graph=graph, src=nei
                 )
@@ -375,14 +473,16 @@ class tilfa:
                     lfa_paths = [
                         (
                             [[src, nei]],
-                            [n_d_paths],
+                            n_d_paths,
                             [[]]
                         )
                     ]
+                    print(f"5.1.1: {lfa_paths}") ##########################
                 elif cost == lfa_cost:
                     lfa_paths.append(
                             ([[src, nei]], [n_d_path for n_d_path in n_d_paths], [[]])
                         )
+                    print(f"5.1.2: {lfa_paths}") ##########################
 
         """
         TI-LFA Text:
@@ -426,8 +526,9 @@ class tilfa:
                     Check if this path has a lower cost from src to dst
                     than the current TI-LFA path(s)
                     """
-                    cost = self.spf.gen_path_cost(tmp_g, [post_s_p_paths[0] + p_d_paths[0][1:]])
+                    cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0] + p_d_paths[0][1:])
                     if cost < lfa_cost or lfa_cost == 0:
+                        print(f"5.2.1: {cost} < {lfa_cost}: {lfa_paths}") ##########################
                         lfa_cost = cost
                         lfa_paths = [
                             (
@@ -451,7 +552,10 @@ class tilfa:
                         """
                         for tilfa in lfa_paths:
                             if tilfa[0][-1] != post_s_p_paths[0][-1]:
-                                if self.spf.gen_path_cost(tmp_g, post_s_p_paths[0]) < self.spf.gen_path_cost(tmp_g, tilfa[0]): ########## Can any of the paths to p_node be different cost?
+                                cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0])
+                                this_lfa = self.spf.gen_path_cost(tmp_g, tilfa[0][0]) ########## Can any of the paths to p_node be different cost?
+                                if cost < this_lfa:
+                                    print(f"5.2.2: {cost} < {this_lfa}: {lfa_paths}") ##########################
                                     lfa_paths = [
                                         (
                                             post_s_p_paths,
@@ -470,6 +574,7 @@ class tilfa:
                                     [graph.nodes[p_node]["node_sid"]]
                                 )
                             )
+                            print(f"5.2.3: {lfa_paths}") ##########################
 
         """
         TI-LFA Text:
@@ -519,6 +624,7 @@ class tilfa:
                                         ]
                                     )
                                 ]
+                                print(f"5.3.1: {lfa_paths}") ##########################
                             else:
                                 lfa_paths.append(
                                     (
@@ -529,8 +635,9 @@ class tilfa:
                                             graph.edges[(p_node, q_node)]["adj_sid"]
                                         ]
                                     )
-                                
                                 )
+                                print(f"5.3.2: {lfa_paths}") ##########################
+
                             """
                             tilfa_paths["paths"] = [ 
                                 (s_p_path + [q_node], q_d_path)
@@ -632,6 +739,16 @@ class tilfa:
         if self.debug > 0:
             print(f"Calculating TI-LFA paths from {src} to {dst}")
 
+        tilfas = {
+            "tilfas_link": [],
+            "tilfas_node": []
+        }
+
+        s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        # There are no paths between this src,dst pair
+        if not s_d_paths:
+            return tilfas
+
         """
         TI-LFA Text:
         5. TI-LFA Repair path
@@ -648,7 +765,7 @@ class tilfa:
         along the post convergence path.  The TI-LFA repair list is expressed
         generally as (Node_SID(P), EP(P, Q)).
         """
-
+        
         if self.ep_space:
             link_ep_space = self.gen_ep_space(dst, "link", graph, src)
             node_ep_space = self.gen_ep_space(dst, "node", graph, src)
@@ -656,12 +773,12 @@ class tilfa:
                 print(f"link_ep_space: {link_ep_space}")
                 print(f"node_ep_space: {node_ep_space}")
         else:
-            link_p_space = self.gen_link_p_space(dst, graph, src, src)
-            node_p_space = self.gen_node_p_space(dst, graph, src, src)
+            link_p_space = self.gen_link_p_space(dst, graph, src)
+            node_p_space = self.gen_node_p_space(dst, graph, src)
             if self.debug > 0:
                 print(f"link_p_space: {link_p_space}")
                 print(f"node_p_space: {node_p_space}")
-
+        
         link_q_space = self.gen_link_q_space(dst, graph, src)
         node_q_space = self.gen_node_q_space(dst, graph, src)
         if self.debug > 0:

@@ -12,33 +12,33 @@ from pyfrr import pyfrr
 
 # Example topology
 links = [
-    {"source": "P1", "target": "P2", "weight": 10},
-    {"source": "P2", "target": "P4", "weight": 10},
-    {"source": "P3", "target": "P4", "weight": 10},
-    {"source": "P3", "target": "P1", "weight": 10},
-    {"source": "P1", "target": "P5", "weight": 1},
-    {"source": "P5", "target": "PE1", "weight": 1},
-    {"source": "PE1", "target": "P2", "weight": 10},
-    {"source": "PE2", "target": "P3", "weight": 10},
-    {"source": "PE2", "target": "P4", "weight": 10},
-    {"source": "PE3", "target": "P1", "weight": 10},
-    {"source": "PE3", "target": "P3", "weight": 10},
-    {"source": "PE4", "target": "P2", "weight": 10},
-    {"source": "PE4", "target": "P4", "weight": 10},
-    {"source": "PE5", "target": "P2", "weight": 10},
-    {"source": "PE5", "target": "P4", "weight": 10},
+    {"source": "P1", "target": "P2", "weight": 10, "adj_sid": 3012},
+    {"source": "P2", "target": "P4", "weight": 10, "adj_sid": 3024},
+    {"source": "P3", "target": "P4", "weight": 10, "adj_sid": 3034},
+    {"source": "P3", "target": "P1", "weight": 10, "adj_sid": 3031},
+    {"source": "P1", "target": "P5", "weight": 1, "adj_sid": 3015},
+    {"source": "P5", "target": "PE1", "weight": 1, "adj_sid": 4051},
+    {"source": "PE1", "target": "P2", "weight": 10, "adj_sid": 4012},
+    {"source": "PE2", "target": "P3", "weight": 10, "adj_sid": 4023},
+    {"source": "PE2", "target": "P4", "weight": 10, "adj_sid": 4024},
+    {"source": "PE3", "target": "P1", "weight": 10, "adj_sid": 4031},
+    {"source": "PE3", "target": "P3", "weight": 10, "adj_sid": 4033},
+    {"source": "PE4", "target": "P2", "weight": 10, "adj_sid": 4042},
+    {"source": "PE4", "target": "P4", "weight": 10, "adj_sid": 4044},
+    {"source": "PE5", "target": "P2", "weight": 10, "adj_sid": 4052},
+    {"source": "PE5", "target": "P4", "weight": 10, "adj_sid": 4054},
 ]
 nodes = [
-    {"id": "P1"},
-    {"id": "P2"},
-    {"id": "P3"},
-    {"id": "P4"},
-    {"id": "PE1"},
-    {"id": "PE2"},
-    {"id": "PE3"},
-    {"id": "PE4"},
-    {"id": "PE5"},
-    {"id": "P5"},
+    {"id": "P1", "node_sid": 1001},
+    {"id": "P2", "node_sid": 1002},
+    {"id": "P3", "node_sid": 1003},
+    {"id": "P4", "node_sid": 1004},
+    {"id": "P5", "node_sid": 1005},
+    {"id": "PE1", "node_sid": 2001},
+    {"id": "PE2", "node_sid": 2002},
+    {"id": "PE3", "node_sid": 2003},
+    {"id": "PE4", "node_sid": 2004},
+    {"id": "PE5", "node_sid": 2005},
 ]
 
 pp = pprint.PrettyPrinter(indent=2)
@@ -147,7 +147,7 @@ def pprint_lfas(f):
 
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.lfa.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 if f.topo[src][dst][path_type]:
                     print(f.topo[src][dst][path_type])
@@ -162,7 +162,7 @@ def pprint_rlfas(f):
 
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.rlfa.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 paths = []
                 for path in f.topo[src][dst][path_type]:
@@ -179,7 +179,7 @@ def pprint_spf(f):
 
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.spf.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 print(f.topo[src][dst][path_type])
 
@@ -188,10 +188,9 @@ def pprint_tilfas(f):
     """
     Print all the calculated TI-LFA paths.
     """
-    """
     for src, dst in [(s, d) for d in f.topo for s in f.topo if s != d]:
         for path_type in f.tilfa.path_types:
-            if path_type in f.topo[src][dst]:
+            if path_type in f.topo[src][dst] and f.topo[src][dst][path_type]:
                 print(f"{path_type} path(s) from {src} to {dst}: ", end="")
                 paths = []
                 for path in f.topo[src][dst][path_type]:
@@ -199,8 +198,6 @@ def pprint_tilfas(f):
                         for p_d_path in path[1]:
                             paths.append(s_p_path + p_d_path[1:])
                 print(paths)
-    """
-    ##################################################### TODO
 
 def main():
 
@@ -281,10 +278,10 @@ def main():
             print("Failed to initial pyFRR module")
             return
 
-        """
         f.gen_all_metric_spfs()
         f.gen_all_metric_lfas()
         f.gen_all_metric_rlfas()
+        f.gen_all_metric_tilfas()
 
         print("All paths from PE1 to PE2:")
         pp.pprint(f.get_paths(src="PE1", dst="PE2"))
@@ -301,9 +298,6 @@ def main():
         outdir = f.draw_spf("./example_topo_spf_diagrams")
         if outdir:
             print(f"Rendered shortest path diagrams to {outdir}")
-        """
-
-        f.gen_all_metric_tilfas()
 
     sys.exit()
 

@@ -16,7 +16,7 @@ class spf:
         """
         self.debug = debug
         self.diagram = Diagram(debug=self.debug)
-        self.path_types = ["cost"]
+        self.path_types = ["spf_metric"]
 
     def draw(self, graph, outdir, topology):
         """
@@ -194,6 +194,7 @@ class spf:
         """
 
         cost = 0
+        print(f"gen_path_cost(): {path}") ###########################################
         for idx, node in enumerate(path):
             if idx < (len(path) - 1):
                 cost += graph.edges[node, path[idx + 1]]["weight"]

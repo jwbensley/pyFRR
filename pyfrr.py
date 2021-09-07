@@ -100,8 +100,8 @@ class pyfrr:
     def check_topo(self):
         """
         If the graph has changed (nodes were added or removed) since this
-        function was last run, whipe out all existing data, it is no longer
-        valid.
+        function was last run (or it is the first run), whipe out all existing
+        data because it is no longer valid.
 
         :return None:
         :rtype: None
@@ -335,7 +335,7 @@ class pyfrr:
                 """
                 self.spf.init_topo(self.graph, self.topo)
 
-                self.topo[src][dst]["cost"] = self.spf.gen_metric_paths(
+                self.topo[src][dst]["spf_metric"] = self.spf.gen_metric_paths(
                     dst, self.graph, src
                 )
 
@@ -350,11 +350,7 @@ class pyfrr:
         """
 
         self.check_topo()
-
-        #self.tilfa.init_topo(self.graph, self.topo)
-        #tilfas = self.tilfa.gen_metric_paths("P1", self.graph, "PE1")
-        #self.topo["PE1"]["P1"].update(tilfas)
-        #return ##########################################################
+        self.tilfa.check_sids(self.graph)
 
         for src in self.graph.nodes:
             for dst in self.graph.nodes:
@@ -369,7 +365,6 @@ class pyfrr:
 
                 tilfas = self.tilfa.gen_metric_paths(dst, self.graph, src)
                 self.topo[src][dst].update(tilfas)
-            return #############################################################
 
     def get_paths(self, dst=None, src=None):
         """

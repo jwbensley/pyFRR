@@ -45,7 +45,7 @@ class lfa:
                     frr_graph = graph.copy()
 
                     # Highlight the failed first-hop link(s) as red
-                    for path in topology[src][dst]["cost"]:
+                    for path in topology[src][dst]["spf_metric"]:
                         frr_graph = self.diagram.highlight_fh_link(
                             "red",
                             frr_graph,
@@ -54,14 +54,14 @@ class lfa:
 
                     # Highlight the failed first-hop node(s) as red
                     if path_type == "lfas_dstream":
-                        for path in topology[src][dst]["cost"]:
+                        for path in topology[src][dst]["spf_metric"]:
                             frr_graph = self.diagram.highlight_fh_node(
                                 "red",
                                 frr_graph,
                                 path,
                             )
                     elif path_type == "lfas_node":
-                        for path in topology[src][dst]["cost"]:
+                        for path in topology[src][dst]["spf_metric"]:
                             frr_graph = self.diagram.highlight_fh_node(
                                 "red",
                                 frr_graph,
@@ -107,9 +107,14 @@ class lfa:
         """
 
         lfas = {"lfas_link": [], "lfas_dstream": [], "lfas_node": []}
+
         if self.debug > 0:
             print(f"Calculating for lfa paths from {src} to {dst}")
+        
         s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        # There are no paths between this src,dst pair
+        if not s_d_paths:
+            return lfas
 
         # Loop over each neighbour to check if each one is an lfa candidate
         for nei in graph.neighbors(src):
