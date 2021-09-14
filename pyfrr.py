@@ -40,7 +40,7 @@ class pyfrr:
         :param list links: List of dicts, each dict is a link between two nodes
         :param list nodes: List of dicts, each dict is a node in the network
         :param bool trombone: rlfa, allow/disallow rlfas that trombone p node
-        :return None: __init__ shouldn't to return anything
+        :return None: __init__ shouldn't return anything
         :rtype: None
         """
 
@@ -351,6 +351,14 @@ class pyfrr:
 
         self.check_topo()
         self.tilfa.check_sids(self.graph)
+
+
+        ############################################################################
+        self.tilfa.init_topo(self.graph, self.topo)
+        tilfas = self.tilfa.gen_metric_paths("PE2", self.graph, "PE1")
+        self.topo["PE1"]["PE2"].update(tilfas)
+        return
+        ############################################################################
 
         for src in self.graph.nodes:
             for dst in self.graph.nodes:

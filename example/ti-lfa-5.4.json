@@ -1,0 +1,32 @@
+{
+    "nodes": [
+    {"id": "PE1", "node_sid": 2001},
+    {"id": "PE2", "node_sid": 2002},
+    {"id": "P1", "node_sid": 1001},
+    {"id": "P2", "node_sid": 1002},
+    {"id": "P3", "node_sid": 1003},
+    {"id": "P4", "node_sid": 1004},
+    {"id": "P5", "node_sid": 1005},
+    {"id": "P6", "node_sid": 1006},
+    {"id": "P7", "node_sid": 1007},
+    {"id": "P8", "node_sid": 1008},
+    {"id": "P9", "node_sid": 1009},
+    {"id": "P10", "node_sid": 1010},
+    {"id": "P11", "node_sid": 1011}
+    ],
+    "links": [
+    {"source": "PE1", "target": "P1", "weight": 100, "adj_sid": 4011},
+    {"source": "P1", "target": "P3", "weight": 100, "adj_sid": 3013},
+    {"source": "P3", "target": "P5", "weight": 1000, "adj_sid": 3035},
+    {"source": "P5", "target": "P7", "weight": 1, "adj_sid": 3057},
+    {"source": "P7", "target": "P9", "weight": 1, "adj_sid": 3079},
+    {"source": "P9", "target": "P11", "weight": 1, "adj_sid": 3911},
+    {"source": "P11", "target": "PE2", "weight": 1, "adj_sid": 4112},
+    {"source": "PE1", "target": "P2", "weight": 1, "adj_sid": 4012},
+    {"source": "P2", "target": "P4", "weight": 1, "adj_sid": 3024},
+    {"source": "P4", "target": "P6", "weight": 1, "adj_sid": 3046},
+    {"source": "P6", "target": "P8", "weight": 1, "adj_sid": 3068},
+    {"source": "P8", "target": "P10", "weight": 1, "adj_sid": 4810},
+    {"source": "P10", "target": "PE2", "weight": 1, "adj_sid": 4102}
+    ]
+}

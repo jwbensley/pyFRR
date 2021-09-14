@@ -412,7 +412,7 @@ class tilfa:
         :param list link_q_space: List of nodes in D's Q-space
         :param list link_pq_space: List of nodes in D's Q-Space in post-SPF
         :param str src: Source node name in "graph"
-        :return tilfa_paths: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        :return tilfa_paths: list of dict of TI-LFA paths 
         :rtype: list
         """
 
@@ -422,7 +422,6 @@ class tilfa:
         tilfa_paths = []
         lfa_cost = 0
         lfa_p_cost = 0
-        lfa_paths = []
 
         """
         TI-LFA Text:
@@ -470,19 +469,21 @@ class tilfa:
                 cost = self.spf.gen_path_cost(graph, [src] + n_d_paths[0])
                 if cost < lfa_cost or lfa_cost == 0:
                     lfa_cost = cost
-                    lfa_paths = [
+                    tilfa_paths = [
                         (
                             [[src, nei]],
                             n_d_paths,
                             [[]]
                         )
                     ]
-                    print(f"5.1.1: {lfa_paths}") ##########################
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.1.1: {tilfa_paths}")
                 elif cost == lfa_cost:
-                    lfa_paths.append(
+                    tilfa_paths.append(
                             ([[src, nei]], [n_d_path for n_d_path in n_d_paths], [[]])
                         )
-                    print(f"5.1.2: {lfa_paths}") ##########################
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.1.2: {tilfa_paths}")
 
         """
         TI-LFA Text:
@@ -528,15 +529,16 @@ class tilfa:
                     """
                     cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0] + p_d_paths[0][1:])
                     if cost < lfa_cost or lfa_cost == 0:
-                        print(f"5.2.1: {cost} < {lfa_cost}: {lfa_paths}") ##########################
                         lfa_cost = cost
-                        lfa_paths = [
+                        tilfa_paths = [
                             (
                                 post_s_p_paths,
                                 p_d_paths,
                                 [graph.nodes[p_node]["node_sid"]]
                             )
                         ]
+                        if self.debug > 0:
+                            print(f"TI-LFA 5.2.1: {tilfa_paths}")
 
                     # If it has the same cost...
                     elif cost == lfa_cost:
@@ -550,31 +552,33 @@ class tilfa:
                         thus reduces the MTU required and likelihood for
                         excessive MPLS label push operations.
                         """
-                        for tilfa in lfa_paths:
+                        for tilfa in tilfa_paths:
                             if tilfa[0][-1] != post_s_p_paths[0][-1]:
                                 cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0])
                                 this_lfa = self.spf.gen_path_cost(tmp_g, tilfa[0][0]) ########## Can any of the paths to p_node be different cost?
                                 if cost < this_lfa:
-                                    print(f"5.2.2: {cost} < {this_lfa}: {lfa_paths}") ##########################
-                                    lfa_paths = [
+                                    tilfa_paths = [
                                         (
                                             post_s_p_paths,
                                             p_d_paths,
                                             [graph.nodes[p_node]["node_sid"]]
                                         )
                                     ]
+                                    if self.debug > 0:
+                                        print(f"TI-LFA 5.2.2: {tilfa_paths}")
                                     break
                         
                         # Else it's an ECMP path with the same cost to p_node
                         else:
-                            lfa_paths.append (
+                            tilfa_paths.append (
                                 (
                                     post_s_p_paths,
                                     p_d_paths,
                                     [graph.nodes[p_node]["node_sid"]]
                                 )
                             )
-                            print(f"5.2.3: {lfa_paths}") ##########################
+                            if self.debug > 0:
+                                print(f"TI-LFA 5.2.3: {tilfa_paths}")
 
         """
         TI-LFA Text:
@@ -614,7 +618,7 @@ class tilfa:
                             )
                             if cost < lfa_cost or lfa_cost == 0:
                                 lfa_cost = cost
-                                lfa_paths = [
+                                tilfa_paths = [
                                     (
                                         [s_p_path + [q_node] for s_p_path in s_p_paths],
                                         q_d_paths,
@@ -624,9 +628,10 @@ class tilfa:
                                         ]
                                     )
                                 ]
-                                print(f"5.3.1: {lfa_paths}") ##########################
+                                if self.debug > 0:
+                                    print(f"TI-LFA 5.3.1: {tilfa_paths}")
                             else:
-                                lfa_paths.append(
+                                tilfa_paths.append(
                                     (
                                         [s_p_path + [q_node] for s_p_path in s_p_paths],
                                         q_d_paths,
@@ -636,20 +641,8 @@ class tilfa:
                                         ]
                                     )
                                 )
-                                print(f"5.3.2: {lfa_paths}") ##########################
-
-                            """
-                            tilfa_paths["paths"] = [ 
-                                (s_p_path + [q_node], q_d_path)
-                                for s_p_path in s_p_paths
-                                for q_d_path in q_d_paths
-                            ]
-                            tilfa_paths["sids"] = [
-                                graph.nodes[p_node]["node_sid"],
-                                graph.edges[(p_node, q_node)]["adj_sid"]
-                            ]
-                            """
-        return lfa_paths
+                                if self.debug > 0:
+                                    print(f"TI-LFA 5.3.2: {tilfa_paths}")
 
         """
         5.4. Connecting distant P and Q nodes along post-convergence paths
@@ -660,43 +653,11 @@ class tilfa:
         path from P to Q. How these computations are done is out of scope of
         this document.
         """
-        '''
-        for p_node in graph.nodes:
-            if p_node == src or p_node == dst:
-                continue
-            if p_node in link_ep_space:
-                if p_node not in d_q_space:
-                    for q_node in graph.nodes:
-                        if q_node == src or q_node == dst:
-                            continue
-                        if q_node in d_q_space:
-                            """
-                            If both P and Q nodes are in Post_SPT(D) then two
-                            node SIDs can be used to avoid the failed link:
-                            """
-                            if p_node in link_q_space:
-                                if q_node in link_q_space:
-                                    if self.debug > 1:
-                                        print(
-                                            f"Remote P-Node {p_node} and remote Q-Node {q_node} "
-                                            f"together are link protecting from "
-                                            f"{src} to {dst}"
-                                        )
-                                    s_p_paths = self.spf.gen_metric_paths(
-                                        dst=p_node, graph=graph, src=src
-                                    )
-                                    p_q_paths = self.spf.gen_metric_paths(
-                                        dst=p_node, graph=graph, src=p_node
-                                    )
-                                    q_d_paths = self.spf.gen_metric_paths(
-                                        dst=dst, graph=graph, src=q_node
-                                    )
-                                    tilfa_paths["paths"] = [ 
-                                        (s_p_path, p_q_path, q_d_path) for s_p_path in s_p_paths for p_q_path in p_q_paths for q_d_path in q_d_paths
-                                    ]
-                                    tilfa_paths["sids"] = [ graph.nodes[p_node]["node_sid"], graph.nodes[q_node]["node_sid"] ]
-                                    break
-        '''
+
+        print(f"{link_ep_space}")
+        print(f"{link_q_space}")
+        print(f"{link_pq_space}")
+
 
         return tilfa_paths
 
