@@ -624,7 +624,7 @@ class tilfa:
                                         q_d_paths,
                                         [
                                             graph.nodes[p_node]["node_sid"],
-                                            graph.edges[(p_node, q_node)]["adj_sid"]
+                                            graph.edges[(p_node, q_node)]["adj_sid"]  ############# Need to add all adj_sids along the path
                                         ]
                                     )
                                 ]
@@ -654,9 +654,42 @@ class tilfa:
         this document.
         """
 
-        print(f"{link_ep_space}")
-        print(f"{link_q_space}")
-        print(f"{link_pq_space}")
+        print(f"link_ep_space: {link_ep_space}")
+        print(f"link_q_space: {link_q_space}")
+        print(f"link_pq_space: {link_pq_space}")
+        ep_nodes = [node for node in link_ep_space if node not in link_pq_space]
+        pq_nodes = [node for node in link_pq_space if node not in link_ep_space]
+
+        
+        # Get the pre-converge path(s) to D
+        pre_s_p_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        pre_s_p_fh_links = [(src, path[1]) for path in pre_s_p_paths]
+        
+        # Remove the pre-convergence the first-hop link(s) from the graph
+        tmp_g = graph.copy()
+        for fh_link in pre_s_p_fh_links:
+            tmp_g.remove_edge(*fh_link)
+
+        """
+        For each ep node calculate the post convergence path to each pq node.
+        Build a list of all these paths to get the lowest cost one.
+        """
+        pq_paths = []
+        pq_cost = 0
+        for ep in ep_nodes:
+            for pq in pq_nodes:
+                post_p_q_paths = self.spf.gen_metric_paths(dst=pq, graph=tmp_g, src=ep)
+
+                if len(post_p_q_paths[0]) > 0:
+                    for path in post_p_q_paths:
+                        cost = self.spf.gen_path_cost(tmp_g, path)
+                        if cost < pq_cost or pq_cost == 0:
+                            pq_paths = [path]
+                            pq_cost = cost
+                        elif cost == pq_cost:
+                            pq_paths.append(path)
+        print(f"pq_paths: {pq_paths}")
+        ###################### Now stick together the s->ep path, pq_path, and pq->d paths.
 
 
         return tilfa_paths
