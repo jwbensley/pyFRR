@@ -630,7 +630,7 @@ class tilfa:
                                 ]
                                 if self.debug > 0:
                                     print(f"TI-LFA 5.3.1: {tilfa_paths}")
-                            else:
+                            elif cost == lfa_cost:
                                 tilfa_paths.append(
                                     (
                                         [s_p_path + [q_node] for s_p_path in s_p_paths],
@@ -674,8 +674,8 @@ class tilfa:
         For each ep node calculate the post convergence path to each pq node.
         Build a list of all these paths to get the lowest cost one.
         """
-        pq_paths = []
-        pq_cost = 0
+        p_q_paths = []
+        p_q_cost = 0
         for ep in ep_nodes:
             for pq in pq_nodes:
                 post_p_q_paths = self.spf.gen_metric_paths(dst=pq, graph=tmp_g, src=ep)
@@ -683,13 +683,60 @@ class tilfa:
                 if len(post_p_q_paths[0]) > 0:
                     for path in post_p_q_paths:
                         cost = self.spf.gen_path_cost(tmp_g, path)
-                        if cost < pq_cost or pq_cost == 0:
-                            pq_paths = [path]
-                            pq_cost = cost
-                        elif cost == pq_cost:
-                            pq_paths.append(path)
-        print(f"pq_paths: {pq_paths}")
-        ###################### Now stick together the s->ep path, pq_path, and pq->d paths.
+                        if cost < p_q_cost or p_q_cost == 0:
+                            p_q_paths = [path]
+                            p_q_cost = cost
+                        elif cost == p_q_cost:
+                            if path not in p_q_paths:
+                                p_q_paths.append(path)
+        print(f"p_q_paths: {p_q_paths}") ##############################################
+
+        ###################### Now stick together the s_p_paths, p_q_paths, and q_d_paths.
+
+        s_q_paths = []
+        cost = 0
+        if len(p_q_paths[0]) > 0:
+            for p_q_path in p_q_paths:
+                p = p_q_path[0]
+                ##################################q = p_q_path[-1]
+                s_p_paths = self.spf.gen_metric_paths(dst=p, graph=tmp_g, src=src)
+                ##################s_p_cost = self.spf.gen_path_cost(tmp_g, s_p_paths[0])
+                for s_p_path in s_p_paths:
+                    s_q_paths.append(s_p_path + p_q_path[1:])
+
+            print(f"s_q_paths: {s_q_paths}") ######################################
+            cost = self.spf.gen_path_cost(tmp_g, s_q_paths[0])
+            if cost < lfa_cost or lfa_cost == 0:
+                lfa_cost = cost
+                tilfa_paths = []
+                for s_q_path in s_q_paths:
+                    q = s_q_path[-1]
+                    q_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=q)
+                    tilfa_paths.append (
+                        [
+                            s_q_path,
+                            q_d_paths,
+                            [
+                                self.path_adj_sids(tmp_g, s_q_paths),
+                                self.path_adj_sids(tmp_g, q_d_paths)
+                            ]
+                        ]
+                    )
+                if self.debug > 0:
+                    print(f"TI-LFA 5.4.1: {tilfa_paths}")
+            elif cost == lfa_cost:
+                tilfa_paths.append(
+                    (
+                        s_q_paths,
+                        q_d_paths,
+                        [
+                            self.path_adj_sids(tmp_g, s_q_paths),
+                            self.path_adj_sids(tmp_g, q_d_paths)
+                        ]
+                    )
+                )
+                if self.debug > 0:
+                    print(f"TI-LFA 5.4.2: {tilfa_paths}")
 
 
         return tilfa_paths
@@ -993,6 +1040,28 @@ class tilfa:
                 for path_type in self.path_types:
                     if path_type not in topo[src][dst]:
                         topo[src][dst][path_type] = []
+
+    def path_adj_sids(self, graph, paths):
+        """
+        Return lists of adj SIDs that will steer along the explicit path(s)
+
+        :param networkx.Graph graph: NetworkX graph object
+        :param list paths: List of list of paths
+        :return adj_sids: List of lists, of adj SIDs for each path
+        :rtype: list
+        """
+        adj_sids = [[]]
+        for path in paths:
+            sids = []
+            for idx, node in enumerate(path):
+                if idx < (len(path) - 1):
+                    sids.append(graph.edges[(node, path[idx + 1])]["adj_sid"])
+            adj_sids.append(sids)
+
+        if self.debug > 1:
+            print(f"path_adj_sids: {adj_sids}")
+
+        return adj_sids
 
 
 """
