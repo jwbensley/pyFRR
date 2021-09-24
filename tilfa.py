@@ -693,51 +693,55 @@ class tilfa:
 
         ###################### Now stick together the s_p_paths, p_q_paths, and q_d_paths.
 
-        s_q_paths = []
         cost = 0
+        lfa_cost = 0 ###########################
         if len(p_q_paths[0]) > 0:
             for p_q_path in p_q_paths:
                 p = p_q_path[0]
-                ##################################q = p_q_path[-1]
+                q = p_q_path[-1]
                 s_p_paths = self.spf.gen_metric_paths(dst=p, graph=tmp_g, src=src)
-                ##################s_p_cost = self.spf.gen_path_cost(tmp_g, s_p_paths[0])
-                for s_p_path in s_p_paths:
-                    s_q_paths.append(s_p_path + p_q_path[1:])
+                q_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=q)
 
-            print(f"s_q_paths: {s_q_paths}") ######################################
-            cost = self.spf.gen_path_cost(tmp_g, s_q_paths[0])
-            if cost < lfa_cost or lfa_cost == 0:
-                lfa_cost = cost
-                tilfa_paths = []
-                for s_q_path in s_q_paths:
-                    q = s_q_path[-1]
-                    q_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=q)
-                    tilfa_paths.append (
-                        [
-                            s_q_path,
-                            q_d_paths,
-                            [
-                                self.path_adj_sids(tmp_g, s_q_paths),
-                                self.path_adj_sids(tmp_g, q_d_paths)
-                            ]
-                        ]
-                    )
-                if self.debug > 0:
-                    print(f"TI-LFA 5.4.1: {tilfa_paths}")
-            elif cost == lfa_cost:
-                tilfa_paths.append(
-                    (
-                        s_q_paths,
-                        q_d_paths,
-                        [
-                            self.path_adj_sids(tmp_g, s_q_paths),
-                            self.path_adj_sids(tmp_g, q_d_paths)
-                        ]
-                    )
-                )
-                if self.debug > 0:
-                    print(f"TI-LFA 5.4.2: {tilfa_paths}")
+                cost = self.spf.gen_path_cost(tmp_g, s_p_paths[0]+p_q_path[1:])
+                if cost < lfa_cost or lfa_cost == 0:
+                    if self.debug > 1:
+                        print(
+                            f"Remote P & Q nodes {(p,q)} are link "
+                            f"protecting from {src} to {dst}"
+                        )
+                    lfa_cost = cost
+                    tilfa_paths = []
 
+                    for s_p_path in s_p_paths:
+                        print(f"s_p_path_1: {s_p_path}") ################################
+                        tilfa_paths.append (
+                            (
+                                s_p_path + p_q_path[1:],
+                                q_d_paths,
+                                [
+                                    self.path_adj_sids(tmp_g, s_p_path),
+                                    self.path_adj_sids(tmp_g, p_q_path)
+                                ]
+                            )
+                        )
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.4.1: {tilfa_paths}")
+
+                elif cost == lfa_cost:
+                    for s_p_path in s_p_paths:
+                        print(f"s_p_path_2: {s_p_path}") ######################
+                        tilfa_paths.append(
+                            (
+                                s_p_path + p_q_path[1:],
+                                q_d_paths,
+                                [
+                                    self.path_adj_sids(tmp_g, s_p_path),
+                                    self.path_adj_sids(tmp_g, p_q_path)
+                                ]
+                            )
+                        )
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.4.2: {tilfa_paths}")
 
         return tilfa_paths
 
@@ -1041,22 +1045,19 @@ class tilfa:
                     if path_type not in topo[src][dst]:
                         topo[src][dst][path_type] = []
 
-    def path_adj_sids(self, graph, paths):
+    def path_adj_sids(self, graph, path):
         """
-        Return lists of adj SIDs that will steer along the explicit path(s)
+        Return lists of adj SIDs that will steer along the explicit path
 
         :param networkx.Graph graph: NetworkX graph object
-        :param list paths: List of list of paths
-        :return adj_sids: List of lists, of adj SIDs for each path
+        :param list paths: List of nodes that form the explicit path
+        :return adj_sids: List of adj SIDs along path
         :rtype: list
         """
-        adj_sids = [[]]
-        for path in paths:
-            sids = []
-            for idx, node in enumerate(path):
-                if idx < (len(path) - 1):
-                    sids.append(graph.edges[(node, path[idx + 1])]["adj_sid"])
-            adj_sids.append(sids)
+        adj_sids = []
+        for idx, node in enumerate(path):
+            if idx < (len(path) - 1):
+                adj_sids.append(graph.edges[(node, path[idx + 1])]["adj_sid"])
 
         if self.debug > 1:
             print(f"path_adj_sids: {adj_sids}")
