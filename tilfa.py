@@ -712,34 +712,34 @@ class tilfa:
                     lfa_cost = cost
                     tilfa_paths = []
 
-                    for s_p_path in s_p_paths:
-                        print(f"s_p_path_1: {s_p_path}") ################################
-                        tilfa_paths.append (
-                            (
-                                s_p_path + p_q_path[1:],
-                                q_d_paths,
-                                [
-                                    self.path_adj_sids(tmp_g, s_p_path),
-                                    self.path_adj_sids(tmp_g, p_q_path)
-                                ]
-                            )
+                    #####for s_p_path in s_p_paths:
+                    print(f"s_p_paths_1: {s_p_paths[0]}") ################################
+                    tilfa_paths.append (
+                        (
+                            [s_p_path +  p_q_path[1:] for s_p_path in s_p_paths],
+                            q_d_paths,
+                            [
+                                self.paths_adj_sids(tmp_g, s_p_paths),
+                                self.paths_adj_sids(tmp_g, [p_q_path])
+                            ]
                         )
+                    )
                     if self.debug > 0:
                         print(f"TI-LFA 5.4.1: {tilfa_paths}")
 
                 elif cost == lfa_cost:
-                    for s_p_path in s_p_paths:
-                        print(f"s_p_path_2: {s_p_path}") ######################
-                        tilfa_paths.append(
-                            (
-                                s_p_path + p_q_path[1:],
-                                q_d_paths,
-                                [
-                                    self.path_adj_sids(tmp_g, s_p_path),
-                                    self.path_adj_sids(tmp_g, p_q_path)
-                                ]
-                            )
+                    #####for s_p_path in s_p_paths:
+                    print(f"s_p_path_2: {s_p_paths[0]}") ######################
+                    tilfa_paths.append(
+                        (
+                            [s_p_path +  p_q_path[1:] for s_p_path in s_p_paths],
+                            q_d_paths,
+                            [
+                                self.paths_adj_sids(tmp_g, s_p_paths),
+                                self.paths_adj_sids(tmp_g, [p_q_path])
+                            ]
                         )
+                    )
                     if self.debug > 0:
                         print(f"TI-LFA 5.4.2: {tilfa_paths}")
 
@@ -1045,19 +1045,22 @@ class tilfa:
                     if path_type not in topo[src][dst]:
                         topo[src][dst][path_type] = []
 
-    def path_adj_sids(self, graph, path):
+    def paths_adj_sids(self, graph, paths):
         """
         Return lists of adj SIDs that will steer along the explicit path
 
         :param networkx.Graph graph: NetworkX graph object
-        :param list paths: List of nodes that form the explicit path
+        :param list paths: List of list of nodes that form the explicit path(s)
         :return adj_sids: List of adj SIDs along path
-        :rtype: list
+        :rtype: list of lists
         """
         adj_sids = []
-        for idx, node in enumerate(path):
-            if idx < (len(path) - 1):
-                adj_sids.append(graph.edges[(node, path[idx + 1])]["adj_sid"])
+        for path in paths:
+            sids = []
+            for idx, node in enumerate(path):
+                if idx < (len(path) - 1):
+                    sids.append(graph.edges[(node, path[idx + 1])]["adj_sid"])
+            adj_sids.append(sids)
 
         if self.debug > 1:
             print(f"path_adj_sids: {adj_sids}")
