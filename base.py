@@ -1,11 +1,11 @@
 import os
-from diagram import Diagram
+from diagram import diagram
 
 
-class Base:
+class base:
     """This class provides functions for the base (unmodified) topology"""
 
-    def __init__(self, debug=0):
+    def __init__(self, debug: bool = 0):
         """
         Init the Base class.
 
@@ -15,7 +15,7 @@ class Base:
         """
 
         self.debug = debug
-        self.diagram = Diagram(debug=self.debug)
+        self.diagram = diagram(debug=self.debug)
         self.path_types = ["base"]
 
     def draw(self, graph, outdir, topology):

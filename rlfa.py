@@ -1,6 +1,6 @@
 import networkx as nx
 import os
-from diagram import Diagram
+from diagram import diagram
 from spf import spf
 
 
@@ -18,7 +18,7 @@ class rlfa:
         :rtype: None
         """
         self.debug = debug
-        self.diagram = Diagram(debug=self.debug)
+        self.diagram = diagram(debug=self.debug)
         self.ep_space = ep_space
         self.path_types = ["rlfas_link", "rlfas_node"]
         self.spf = spf(debug=self.debug)

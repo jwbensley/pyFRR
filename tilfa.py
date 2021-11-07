@@ -1,7 +1,7 @@
 
 import networkx as nx
 import os
-from diagram import Diagram
+from diagram import diagram
 from spf import spf
 
 
@@ -19,7 +19,7 @@ class tilfa:
         :rtype: None
         """
         self.debug = 0
-        self.diagram = Diagram(debug=2)
+        self.diagram = diagram(debug=2)
         self.ep_space = ep_space
         self.path_types = ["tilfas_link", "tilfas_node"]
         self.spf = spf(debug=self.debug)

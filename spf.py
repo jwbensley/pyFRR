@@ -1,6 +1,6 @@
 import networkx as nx
 import os
-from diagram import Diagram
+from diagram import diagram
 
 
 class spf:
@@ -15,7 +15,7 @@ class spf:
         :rtype: None
         """
         self.debug = debug
-        self.diagram = Diagram(debug=self.debug)
+        self.diagram = diagram(debug=self.debug)
         self.path_types = ["spf_metric"]
 
     def draw(self, graph, outdir, topology):

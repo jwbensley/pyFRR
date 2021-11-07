@@ -1,6 +1,6 @@
 import networkx as nx
 import os
-from diagram import Diagram
+from diagram import diagram
 from spf import spf
 
 
