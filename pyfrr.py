@@ -40,7 +40,7 @@ class pyfrr:
         :param list links: List of dicts, each dict is a link between two nodes
         :param list nodes: List of dicts, each dict is a node in the network
         :param bool trombone: rlfa, allow/disallow rlfas that trombone p node
-        :return None: __init__ shouldn't to return anything
+        :return None: __init__ shouldn't return anything
         :rtype: None
         """
 
@@ -484,7 +484,6 @@ class pyfrr:
                                 paths[src][dst] = {}
                             if "rlfas_link" not in paths[src][dst]:
                                 paths[src][dst]["rlfas_link"] = []
-                            #paths[src][dst]["rlfas_link"].append(path)
                             paths[src][dst]["rlfas_link"].append(s_p_path + p_d_path[1:])
 
             for path in self.topo[src][dst]["rlfas_node"]:
@@ -498,7 +497,6 @@ class pyfrr:
                                 paths[src][dst] = {}
                             if "rlfas_node" not in paths[src][dst]:
                                 paths[src][dst]["rlfas_node"] = []
-                            #paths[src][dst]["rlfas_node"].append(path)
                             paths[src][dst]["rlfas_node"].append(s_p_path + p_d_path[1:])
 
         return paths

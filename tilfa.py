@@ -18,12 +18,11 @@ class tilfa:
         :return None: __init__ shouldn't return anything
         :rtype: None
         """
-        self.debug = 0################################# debug
+        self.debug = 0
         self.diagram = Diagram(debug=2)
         self.ep_space = ep_space
         self.path_types = ["tilfas_link", "tilfas_node"]
-        #self.spf = spf(debug=self.debug)
-        self.spf = spf(debug=0)
+        self.spf = spf(debug=self.debug)
         ###self.trombone = trombone
 
     def check_sids(self, graph):
@@ -98,10 +97,7 @@ class tilfa:
 
                 tilfa_graph = graph.copy()
 
-                print(f"draw paths: {topology[src][dst][path_type]}") ###############
-
                 # Highlight the failed first-hop link as red
-                print(f"spf_metric: {topology[src][dst]['spf_metric']}") ##########
                 for path in topology[src][dst]["spf_metric"]:
                     tilfa_graph = self.diagram.highlight_fh_link(
                         "red",
@@ -146,9 +142,6 @@ class tilfa:
                 tilfa_graph = self.diagram.label_link_add_adjsid(tilfa_graph)
                 tilfa_graph = self.diagram.label_node_id(tilfa_graph)
                 tilfa_graph = self.diagram.label_node_add_nodesid(tilfa_graph)
-                ##################################################################### TODO Add Adj-SIDs
-                ##################################################################### TODO Add Node SIDs
-                # Stored in tilfa[2]
 
                 self.diagram.gen_diagram(
                     (src + "_" + dst + "_" + path_type),
@@ -412,17 +405,13 @@ class tilfa:
         :param list link_q_space: List of nodes in D's Q-space
         :param list link_pq_space: List of nodes in D's Q-Space in post-SPF
         :param str src: Source node name in "graph"
-        :return tilfa_paths: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        :return tilfa_paths: list of dict of TI-LFA paths 
         :rtype: list
         """
 
-        self.debug = 2 ##############################################################################
-
-        print(f"***************************gen_metric_link_tilfas({src}, {dst})***************************")
         tilfa_paths = []
         lfa_cost = 0
         lfa_p_cost = 0
-        lfa_paths = []
 
         """
         TI-LFA Text:
@@ -470,19 +459,21 @@ class tilfa:
                 cost = self.spf.gen_path_cost(graph, [src] + n_d_paths[0])
                 if cost < lfa_cost or lfa_cost == 0:
                     lfa_cost = cost
-                    lfa_paths = [
+                    tilfa_paths = [
                         (
                             [[src, nei]],
                             n_d_paths,
                             [[]]
                         )
                     ]
-                    print(f"5.1.1: {lfa_paths}") ##########################
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.1.1: {tilfa_paths}")
                 elif cost == lfa_cost:
-                    lfa_paths.append(
+                    tilfa_paths.append(
                             ([[src, nei]], [n_d_path for n_d_path in n_d_paths], [[]])
                         )
-                    print(f"5.1.2: {lfa_paths}") ##########################
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.1.2: {tilfa_paths}")
 
         """
         TI-LFA Text:
@@ -520,23 +511,23 @@ class tilfa:
                     p_d_paths = self.spf.gen_metric_paths(
                         dst=dst, graph=tmp_g, src=p_node
                     )
-                    
-                    ################################################# Instead of append, only choose the paths with the equal shortest path to the p_node
+
                     """
                     Check if this path has a lower cost from src to dst
                     than the current TI-LFA path(s)
                     """
                     cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0] + p_d_paths[0][1:])
                     if cost < lfa_cost or lfa_cost == 0:
-                        print(f"5.2.1: {cost} < {lfa_cost}: {lfa_paths}") ##########################
                         lfa_cost = cost
-                        lfa_paths = [
+                        tilfa_paths = [
                             (
                                 post_s_p_paths,
                                 p_d_paths,
                                 [graph.nodes[p_node]["node_sid"]]
                             )
                         ]
+                        if self.debug > 0:
+                            print(f"TI-LFA 5.2.1: {tilfa_paths}")
 
                     # If it has the same cost...
                     elif cost == lfa_cost:
@@ -550,31 +541,33 @@ class tilfa:
                         thus reduces the MTU required and likelihood for
                         excessive MPLS label push operations.
                         """
-                        for tilfa in lfa_paths:
+                        for tilfa in tilfa_paths:
                             if tilfa[0][-1] != post_s_p_paths[0][-1]:
                                 cost = self.spf.gen_path_cost(tmp_g, post_s_p_paths[0])
                                 this_lfa = self.spf.gen_path_cost(tmp_g, tilfa[0][0]) ########## Can any of the paths to p_node be different cost?
                                 if cost < this_lfa:
-                                    print(f"5.2.2: {cost} < {this_lfa}: {lfa_paths}") ##########################
-                                    lfa_paths = [
+                                    tilfa_paths = [
                                         (
                                             post_s_p_paths,
                                             p_d_paths,
                                             [graph.nodes[p_node]["node_sid"]]
                                         )
                                     ]
+                                    if self.debug > 0:
+                                        print(f"TI-LFA 5.2.2: {tilfa_paths}")
                                     break
                         
                         # Else it's an ECMP path with the same cost to p_node
                         else:
-                            lfa_paths.append (
+                            tilfa_paths.append (
                                 (
                                     post_s_p_paths,
                                     p_d_paths,
                                     [graph.nodes[p_node]["node_sid"]]
                                 )
                             )
-                            print(f"5.2.3: {lfa_paths}") ##########################
+                            if self.debug > 0:
+                                print(f"TI-LFA 5.2.3: {tilfa_paths}")
 
         """
         TI-LFA Text:
@@ -614,7 +607,7 @@ class tilfa:
                             )
                             if cost < lfa_cost or lfa_cost == 0:
                                 lfa_cost = cost
-                                lfa_paths = [
+                                tilfa_paths = [
                                     (
                                         [s_p_path + [q_node] for s_p_path in s_p_paths],
                                         q_d_paths,
@@ -624,9 +617,10 @@ class tilfa:
                                         ]
                                     )
                                 ]
-                                print(f"5.3.1: {lfa_paths}") ##########################
-                            else:
-                                lfa_paths.append(
+                                if self.debug > 0:
+                                    print(f"TI-LFA 5.3.1: {tilfa_paths}")
+                            elif cost == lfa_cost:
+                                tilfa_paths.append(
                                     (
                                         [s_p_path + [q_node] for s_p_path in s_p_paths],
                                         q_d_paths,
@@ -636,20 +630,8 @@ class tilfa:
                                         ]
                                     )
                                 )
-                                print(f"5.3.2: {lfa_paths}") ##########################
-
-                            """
-                            tilfa_paths["paths"] = [ 
-                                (s_p_path + [q_node], q_d_path)
-                                for s_p_path in s_p_paths
-                                for q_d_path in q_d_paths
-                            ]
-                            tilfa_paths["sids"] = [
-                                graph.nodes[p_node]["node_sid"],
-                                graph.edges[(p_node, q_node)]["adj_sid"]
-                            ]
-                            """
-        return lfa_paths
+                                if self.debug > 0:
+                                    print(f"TI-LFA 5.3.2: {tilfa_paths}")
 
         """
         5.4. Connecting distant P and Q nodes along post-convergence paths
@@ -659,44 +641,96 @@ class tilfa:
         computations to compute a list of segments that represent a loop-free
         path from P to Q. How these computations are done is out of scope of
         this document.
+
+        ---
+
+        Thanks you bastards. We shall calculate any P to Q paths. If some
+        exist, calculate the Source to P paths, then append them together.
         """
-        '''
-        for p_node in graph.nodes:
-            if p_node == src or p_node == dst:
-                continue
-            if p_node in link_ep_space:
-                if p_node not in d_q_space:
-                    for q_node in graph.nodes:
-                        if q_node == src or q_node == dst:
-                            continue
-                        if q_node in d_q_space:
-                            """
-                            If both P and Q nodes are in Post_SPT(D) then two
-                            node SIDs can be used to avoid the failed link:
-                            """
-                            if p_node in link_q_space:
-                                if q_node in link_q_space:
-                                    if self.debug > 1:
-                                        print(
-                                            f"Remote P-Node {p_node} and remote Q-Node {q_node} "
-                                            f"together are link protecting from "
-                                            f"{src} to {dst}"
-                                        )
-                                    s_p_paths = self.spf.gen_metric_paths(
-                                        dst=p_node, graph=graph, src=src
-                                    )
-                                    p_q_paths = self.spf.gen_metric_paths(
-                                        dst=p_node, graph=graph, src=p_node
-                                    )
-                                    q_d_paths = self.spf.gen_metric_paths(
-                                        dst=dst, graph=graph, src=q_node
-                                    )
-                                    tilfa_paths["paths"] = [ 
-                                        (s_p_path, p_q_path, q_d_path) for s_p_path in s_p_paths for p_q_path in p_q_paths for q_d_path in q_d_paths
-                                    ]
-                                    tilfa_paths["sids"] = [ graph.nodes[p_node]["node_sid"], graph.nodes[q_node]["node_sid"] ]
-                                    break
-        '''
+
+        # Get the pre-converge path(s) to D
+        pre_s_p_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
+        pre_s_p_fh_links = [(src, path[1]) for path in pre_s_p_paths]
+        
+        # Remove the pre-convergence the first-hop link(s) from the graph
+        tmp_g = graph.copy()
+        for fh_link in pre_s_p_fh_links:
+            tmp_g.remove_edge(*fh_link)
+
+        """
+        For each ep node calculate the post convergence path to each pq node.
+        Build a list of all these paths to get the lowest cost one.
+        """
+        ep_nodes = [node for node in link_ep_space if node not in link_pq_space]
+        pq_nodes = [node for node in link_pq_space if node not in link_ep_space]
+        p_q_paths = []
+        p_q_cost = 0
+        for ep in ep_nodes:
+            for pq in pq_nodes:
+                post_p_q_paths = self.spf.gen_metric_paths(dst=pq, graph=tmp_g, src=ep)
+
+                if len(post_p_q_paths[0]) > 0:
+                    for path in post_p_q_paths:
+                        cost = self.spf.gen_path_cost(tmp_g, path)
+                        if cost < p_q_cost or p_q_cost == 0:
+                            p_q_paths = [path]
+                            p_q_cost = cost
+                        elif cost == p_q_cost:
+                            if path not in p_q_paths:
+                                p_q_paths.append(path)
+
+        if p_q_paths:
+            # If we found p to q paths, append them to s to p paths
+            s_q_paths = []
+            for p_q_path in p_q_paths:
+                p = p_q_path[0]
+                s_p_paths = self.spf.gen_metric_paths(dst=p, graph=tmp_g, src=src)
+                for s_p_path in s_p_paths:
+                    s_q_paths.append(s_p_path + p_q_path[1:])
+
+            for s_q_path in s_q_paths:
+                cost = self.spf.gen_path_cost(tmp_g, s_q_path)
+
+                if cost < lfa_cost or lfa_cost == 0:
+                    if self.debug > 1:
+                        print(
+                            f"Remote P & Q nodes in {s_q_path} are link "
+                            f"protecting from {src} to {dst}"
+                        )
+                    q = s_q_path[-1]
+                    q_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=q)
+                    lfa_cost = cost
+                    tilfa_paths = [
+                        (
+                            [s_q_path],
+                            q_d_paths,
+                            [
+                                self.paths_adj_sids(tmp_g, [s_q_path])
+                            ]
+                        )
+                    ]
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.4.1: {tilfa_paths}")
+
+                elif cost == lfa_cost:
+                    if self.debug > 1:
+                        print(
+                            f"Remote P & Q nodes in {s_q_path} are link "
+                            f"protecting from {src} to {dst}"
+                        )
+                    q = s_q_path[-1]
+                    q_d_paths = self.spf.gen_metric_paths(dst=dst, graph=tmp_g, src=q)
+                    tilfa_paths.append(
+                        (
+                            [s_q_path],
+                            q_d_paths,
+                            [
+                                self.paths_adj_sids(tmp_g, [s_q_path])
+                            ]
+                        )
+                    )
+                    if self.debug > 0:
+                        print(f"TI-LFA 5.4.2: {tilfa_paths}")
 
         return tilfa_paths
 
@@ -791,7 +825,6 @@ class tilfa:
             print(f"link_pq_space: {link_pq_space}")
             print(f"node_pq_space: {node_pq_space}")
 
-        ############################
 
         if self.ep_space:
             link_tilfas = self.gen_metric_link_tilfas(dst, graph, link_ep_space, link_pq_space, link_q_space, src)
@@ -802,6 +835,7 @@ class tilfa:
         tilfas["tilfas_link"] = link_tilfas
 
         return tilfas
+        ############################
 
         if self.ep_space:
             node_tilfas = self.gen_metric_node_tilfas(dst, graph, node_ep_space, node_pq_space, src)
@@ -1000,181 +1034,24 @@ class tilfa:
                     if path_type not in topo[src][dst]:
                         topo[src][dst][path_type] = []
 
+    def paths_adj_sids(self, graph, paths):
+        """
+        Return lists of adj SIDs that will steer along the explicit path
 
-"""
-6.1.  Link protection
+        :param networkx.Graph graph: NetworkX graph object
+        :param list paths: List of list of nodes that form the explicit path(s)
+        :return adj_sids: List of adj SIDs along path
+        :rtype: list of lists
+        """
+        adj_sids = []
+        for path in paths:
+            sids = []
+            for idx, node in enumerate(path):
+                if idx < (len(path) - 1):
+                    sids.append(graph.edges[(node, path[idx + 1])]["adj_sid"])
+            adj_sids.append(sids)
 
+        if self.debug > 1:
+            print(f"path_adj_sids: {adj_sids}")
 
-6.1.1.  The active segment is a node segment
-
-   The active segment MUST be kept on the SR header unchanged and the
-   repair list MUST be inserted at the head of the list.  The active
-   segment becomes the first segment of the inserted repair list.
-"""
-
-
-"""
-6.1.2.  The active segment is an adjacency segment
-
-   We define hereafter the FRR behavior applied by S for any packet
-   received with an active adjacency segment S-F for which protection
-   was enabled...
-
-   The simplest approach for link protection of an adjacency segment S-F
-   is to create a repair list that will carry the traffic to F.  To do
-   so, one or two "PUSH" operations are performed.  If the repair list,
-   while avoiding S-F, terminates on F, S only pushes the repair list.
-   Otherwise, S pushes a node segment of F, followed by by push of the
-   repair list.  For details on the "NEXT" and "PUSH" operations, refer
-   to [RFC8402].
-"""
-
-"""
-6.1.2.1.  Protecting [Adjacency, Adjacency] segment lists
-
-   If the next segment in the list is an Adjacency segment, then the
-   packet has to be conveyed to F.
-
-   To do so, S MUST apply a "NEXT" operation on Adj(S-F) and then one or
-   two "PUSH" operations.  If the repair list, while avoiding S-F,
-   terminates on F, S only pushes the repair list.  Otherwise, S pushes
-   a node segment of F, followed by push of the repair list...
-
-   Upon failure of S-F, a packet reaching S with a segment list matching
-   [adj(S-F),adj(F-M),...] will thus leave S with a segment list
-   matching [RL(F),node(F),adj(F-M)], where RL(F) is the repair path for
-   destination F.
-"""
-
-"""
-6.1.2.2.  Protecting [Adjacency, Node] segment lists
-
-   If the next segment in the stack is a node segment, say for node T,
-   the segment list on the packet matches [adj(S-F),node(T),...].
-
-   In this case, S MUST apply a "NEXT" operation on the Adjacency
-   segment related to S-F, followed by a "PUSH" of a repair list
-   redirecting the traffic to a node Q, whose path to node segment T is
-   not affected by the failure.
-
-   Upon failure of S-F, packets reaching S with a segment list matching
-   [adj(S-F), node(T), ...], would leave S with a segment list matching
-   [RL(Q),node(T), ...].  Note that this second behavior is the one
-   followed for node protection, as described in Section 6.2.1.
-"""
-
-"""
-6.2.  Protecting SR policy midpoints against node failure
-
-   In this section, we describe the behavior of a node S configured to
-   interpret the failure of link S->F as the node failure of F, in the
-   specific case where the active segment of the packet received by S is
-   a Prefix SID of F represented as "F"), or an Adjacency SID for the
-   link S-F (represented as "S->F").
-
-   The description below is intended to specify the forwarding behavior
-   required for node protection.  The description should not be
-   interpreted as limiting the possible implementations of this
-   forwarding behavior.  An implementation complies with the description
-   below as long as the externally visible forwarding behavior produced
-   by the implementation is the same as that described below.
-
-6.2.1.  Protecting {F, T, D} or {S->F, T, D}
-
-   This section describes the protection behavior of S when all of the
-   following conditions are true:
-
-   1.  the active segment is a prefix SID for a neighbor F, or an
-       adjacency segment S->F
-
-   2.  the primary interface used to forward the packet failed
-
-   3.  the segment following the active segment is a prefix SID (for
-       node T)
-
-   4.  node protection is active for that interface.
-
-   In such a case, the PLR should:
-
-   1.  apply a NEXT operation; the segment F or S->F is removed
-
-   2.  Confirm that the next segment is in the SRGB of F, meaning that
-       the next segment is a prefix segment, e.g. for node T
-
-   3.  Retrieve the segment ID of T (as per the SRGB of F)
-
-   4.  Apply a NEXT operation followed by a PUSH operation of T's
-       segment based on the SRGB of node S.
-
-   5.  Look up T's segment (based on the updated label value) and
-       forward accordingly.
-
-6.2.2.  Protecting {F, F->T, D} or {S->F, F->T, D}
-
-   This section describes the protection behavior of S when all of the
-   following conditions are true:
-
-   1.  the active segment is a prefix SID for a neighbor F, or an
-       adjacency segment S->F
-
-   2.  the primary interface used to forward the packet failed
-
-   3.  the segment following the active segment is an adjacency SID (F-
-       >T)
-
-   4.  node protection is active for that interface.
-
-   In such a case, the PLR should:
-
-   1.  Apply a NEXT operation; the segment F or S->F is removed
-
-   2.  Confirm that the next segment is an adjacency SID of F, say F->T
-
-   3.  Retrieve the node segment ID associated to T (as per the set of
-       Adjacency Segments of F)
-
-   4.  Apply a NEXT operation on the next segment followed by a PUSH of
-       T's segment based on the SRGB of the node S.
-
-   5.  Look up T's segment (based on the updated label value) and
-       forward accordingly.
-
-   It is noteworthy to mention that node "S" in the procedures described
-   in Sections 5.3.1 and 5.3.2 can always determine whether the segment
-   after popping the top segment is an adjacency SID or a prefix-SID of
-   the next-hop "F" as follows:
-
-   1.  In a link state environment, the node "S" knows the SRGB and the
-       adj-SIDs of the neighboring node "F"
-
-   2.  If the new segment after popping the top segment is within the
-       SRGB or the adj-SIDs of "F", then node "S" is certain that the
-       failure of node "F" is a midpoint failure and hence node "S"
-       applies the procedures specified in Sections 5.3.1 or 5.3.2,
-       respectively.
-
-   3.  Otherwise the failure is not a midpoint failure and hence the
-       node "S" may apply other protection techniques that are beyond
-       the scope of this document or simply drop the packet and wait for
-       normal protocol convergence.
-"""
-
-"""
-
-6.3.1.  MPLS dataplane considerations
-
-   The following dataplane behaviors apply when creating a repair list
-   using an MPLS dataplane:
-
-   1.  If the active segment is a node segment that has been signaled
-       with penultimate hop popping and the repair list ends with an
-       adjacency segment terminating on the tail-end of the active
-       segment, then the active segment MUST be popped before pushing
-       the repair list.
-
-   2.  If the active segment is a node segment but the other conditions
-       in 1. are not met, the active segment MUST be popped then pushed
-       again with a label value computed according to the SRGB of Q,
-       where Q is the endpoint of the repair list.  Finally, the repair
-       list MUST be pushed.
-"""
+        return adj_sids

@@ -1,3 +1,5 @@
+# THIS IS A WORK IN PROGRESS - DO NOT USE
+
 # pyFastReRoute
 
 ## Contents
@@ -69,9 +71,11 @@ Specific documentation is provided for each feature:
 * [TI-LFA.md](docs/TI-LFA.md) provides documentation for the draft-ietf-rtgwg-segment-routing-ti-lfa-06 Topology Independent Fast Reroute using Segment Routing features
 
 
-### Planned Features
+### Planned Features/ToDo
 
-* All distances arecurrently calculated as weighted paths, rather than simple paths (hop count). Add support for a simple hop count as a metric (e.g., DC-fabrics).
+* All distances are currently calculated as weighted paths, rather than simple paths (hop count). Add support for a simple hop count as a metric (e.g., DC-fabrics).
+
+* Add TI-LFA option to prefer paths with fewer SID count.
 
 * Add support for Shared Risk Link Groups.
 
@@ -103,7 +107,7 @@ Authoritative References:
 
 Vendor and Blog Posts:
 
-* This one is tricky to follow, the difference between Inequality 1/2/3 and when to use each isn't clear: https://packetpushers.net/ip-frr-micro-loops-part-1/
+* This one is tricky to follow, the difference between Inequality 1/2/3, also when to use each isn't clear: https://packetpushers.net/ip-frr-micro-loops-part-1/
 
 * This Cisco article has lost it's formatting and there are gramatical mistakes which jointly make it difficult to follow: https://www.cisco.com/c/en/us/support/docs/multiprotocol-label-switching-mpls/ldp/212697-loop-free-alternate-and-remote-loop-free.html
 
