@@ -144,7 +144,7 @@ class spf:
     def gen_nei_metric_paths(self, dst, graph, src):
         """
         Return the shortest metric (not hop count) based path(s) from src to
-        each if it's neighbours, and from each neighbour of src toward dst.
+        each of it's neighbours, and from each neighbour of src toward dst.
 
         :param str dst: Destination node name in graph
         :param networkx.Graph graph: NetworkX graph object
@@ -173,7 +173,7 @@ class spf:
 
         if self.debug > 0:
             print(
-                f"Paths from {src} each neighbour of {src}: "
+                f"Paths from each neighbour of {src} to {src}: "
                 f"{paths[src]}"
             )
             print(
@@ -209,7 +209,7 @@ class spf:
         """
         Create empty dict keys for all possible paths this class can generate
 
-        :return None:
+        :return: None
         :rtype: None
         """
 
