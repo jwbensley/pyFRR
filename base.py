@@ -26,8 +26,8 @@ class base:
         :param networkx.Graph graph: NetworkX graph object
         :param str outdir: string of the root output directory path
         :param dict topology: topology paths dict
-        :return bool True: True if diagram rendered otherwise False
-        :rtype: bool
+        :return: None
+        :rtype: None
         """
 
         self.diagram.gen_sub_dirs(graph, outdir, self.path_types, topology)
@@ -38,14 +38,12 @@ class base:
 
         self.diagram.gen_diagram("base", base_graph, os.path.join(outdir, "base"))
 
-        return
-
 
     def init_topo(self, graph, topo):
         """
         Create empty dict keys for all possible paths.
 
-        :return None:
+        :return: None
         :rtype: None
         """
 
