@@ -28,8 +28,8 @@ class diagram:
         :param str filename: basename of output filename
         :param networkx.Graph graph: NetworkX graph object
         :param str outdir: string of the root output directory path
-        :return bool: True or False result of diagram rendering
-        :rtype: bool
+        :return: None, raise if fail
+        :rtype: None
         """
 
         node_dot = os.path.join(outdir, filename + ".dot")

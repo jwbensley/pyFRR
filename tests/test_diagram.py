@@ -48,44 +48,56 @@ class TestDiagram(unittest.TestCase):
 
     def test_highlight_fh_link(self):
         g2 = self.d.highlight_fh_link("red", self.g, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(g2.edges[(1,2)]["color"],"red")
         g2 = self.d.highlight_fh_link(None, g2, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertTrue("color" not in g2.edges[(1,2)])
 
     def test_highlight_fh_node(self):
         g2 = self.d.highlight_fh_node("red", self.g, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(g2.nodes[2]["fillcolor"],"red")
         g2 = self.d.highlight_fh_node(None, g2, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertTrue("fillcolor" not in g2.nodes[2])
 
     def test_highlight_links(self):
         g2 = self.d.highlight_links("red", self.g, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(g2.edges[(2, 3)]["color"],"red")
         g2 = self.d.highlight_links(None, g2, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertTrue("color" not in g2.edges[(2, 3)])
 
     def test_highlight_nodes(self):
         g2 = self.d.highlight_nodes("red", self.g, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(g2.nodes[2]["fillcolor"],"red")
         g2 = self.d.highlight_nodes(None, g2, [1, 2, 3])
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertTrue("fillcolor" not in g2.nodes[2])
 
     def test_highlight_src_dst(self):
         g2 = self.d.highlight_src_dst("red", 2, self.g, 1)
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(g2.nodes[1]["fillcolor"],"red")
         self.assertEqual(g2.nodes[2]["fillcolor"],"red")
         g2 = self.d.highlight_src_dst(None,  2, g2, 1)
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertTrue("fillcolor" not in g2.nodes[1])
         self.assertTrue("fillcolor" not in g2.nodes[2])
 
     def test_label_link_add_adjsid(self):
         g2 = self.d.label_link_add_adjsid(self.g)
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(
             g2.edges[(1,2)]["label"], "\n" + self.g.edges[(1,2)]["adj_sid"]
         )
 
     def test_label_link_weights(self):
         g2 = self.d.label_link_weights(self.g)
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(
             g2.edges[(1,2)]["label"], self.g.edges[1,2]["weight"]
         )
@@ -93,12 +105,14 @@ class TestDiagram(unittest.TestCase):
 
     def test_label_node_id(self):
         g2 = self.d.label_node_id(self.g)
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(
             g2.nodes[1]["label"], "1"
         )
 
     def test_label_node_add_nodesid(self):
         g2 = self.d.label_node_add_nodesid(self.g)
+        self.assertTrue(isinstance(g2, nx.classes.graph.Graph))
         self.assertEqual(
             g2.nodes[1]["label"], "\n1"
         )
