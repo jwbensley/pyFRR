@@ -6,12 +6,12 @@ import subprocess
 ##from networkx.drawing.nx_pydot import write_dot
 
 
-class Diagram:
+class diagram:
     """
     A class for generating diagrams from the passed topology graph.
     """
 
-    def __init__(self, debug=0):
+    def __init__(self, debug: bool = 0):
         """
         Init the Diagram class.
 
@@ -28,8 +28,8 @@ class Diagram:
         :param str filename: basename of output filename
         :param networkx.Graph graph: NetworkX graph object
         :param str outdir: string of the root output directory path
-        :return bool: True or False result of diagram rendering
-        :rtype: bool
+        :return: None, raise if fail
+        :rtype: None
         """
 
         node_dot = os.path.join(outdir, filename + ".dot")
@@ -84,13 +84,13 @@ class Diagram:
                 f"Error deleting pydot dot file {node_dot}: {result[1]}"
             )
 
-    def gen_root_dir(self, outdir):
+    def gen_root_dir(self, outdir: str) -> None:
         """
         Creates the output base directory for rendered diagrams.
 
         :param str outdir: base directory for ourput folder hierarchy
-        :return True: True on success, else raise exception
-        :rtype: bool
+        :return: None, raise if fail
+        :rtype: None
         """
 
         if os.path.isdir(outdir):
@@ -99,59 +99,64 @@ class Diagram:
 
         else:
             try:
-                os.makedirs(outdir, exist_ok=False)
+                os.makedirs(outdir, exist_ok=True)
             except Exception:
                 print(
                     f"Couldn't create diagram output directory {outdir}"
                 )
                 raise
 
-    def gen_sub_dirs(self, graph, outdir, path_types, topology):
+    def gen_sub_dirs(self, graph: nx.classes.graph.Graph, outdir: str, path_types: list, topology: dict) -> None:
         """
         Create the sub-directories under the root outdir that digrams will be
         rendered to as files.
 
         :param networkx.Graph graph: NetworkX graph object
         :param str outdir: root output directory
-        :param list path_types: list of strings, names of path types in
-        topology dict to render
+        :param list path_types: list of str. Path types in topology to render
         :param dict topology: topology paths dict
-        :return bool: Return True is sub directories were successfully created
+        :return: None, raise if fail
+        :rtype: None
         """
 
-        if path_types == ["base"]:
-            # A special case
+        # A special case
+        if "base" in path_types:
             try:
                 base_dir = os.path.join(outdir, "base")
                 os.makedirs(base_dir, exist_ok=True)
             except Exception:
                 print(
-                    f"Couldn't create base toplogy diagram directory {top_dir}"
+                    f"Couldn't create base toplogy diagram directory {base_dir}"
                 )
                 raise
+            path_types.remove("base")
+        
+        if path_types == []:
             return
 
-        try:
-            for src in graph.nodes:
-                src_dir = os.path.join(outdir, src)
-                os.makedirs(src_dir, exist_ok=True)
-                for dst in topology[src]:
-                    for path_type in path_types:
-                        if len(topology[src][dst][path_type]) > 0:
-                            frr_dir = os.path.join(src_dir, path_type)
-                            os.makedirs(frr_dir, exist_ok=True)
-        except Exception:
-            print(f"Couldn't create node directory {src_dir}")
-            raise
+        for src in graph.nodes:
+            if src in topology:
+                try:
+                    src_dir = os.path.join(outdir, str(src))
+                    os.makedirs(src_dir, exist_ok=True)
+                    for dst in topology[src]:
+                        for path_type in path_types:
+                            if len(topology[src][dst][path_type]) > 0:
+                                frr_dir = os.path.join(src_dir, path_type)
+                                os.makedirs(frr_dir, exist_ok=True)
 
-    def highlight_fh_link(self, colour, graph, path):
+                except Exception:
+                    print(f"Couldn't create node directory {src_dir}")
+                    raise
+
+    def highlight_fh_link(self, colour: str, graph: nx.classes.graph.Graph, path: list) -> nx.classes.graph.Graph:
         """
         Highlight the first-hop link "colour" in path.
         If "colour" is None, remove any exisiting colour.
 
         :param str colour: string name of dot colour
         :param networkx.Graph graph: NetworkX graph object
-        :param list path: List of nodes in path
+        :param list path: List of nodes from src to dst
         :return networkx.Graph tmp_g: "graph" copy with colour attributes added
         :rtype: networkx.Graph
         """
@@ -168,7 +173,7 @@ class Diagram:
 
         return tmp_g
 
-    def highlight_fh_node(self, colour, graph, path):
+    def highlight_fh_node(self, colour: str, graph: nx.classes.graph.Graph, path: list) -> nx.classes.graph.Graph:
         """
         Highlight the first-hop node "colour" in "path".
         If "colour" is None, remove any exisiting colour.
@@ -190,7 +195,7 @@ class Diagram:
 
         return tmp_g
 
-    def highlight_links(self, colour, graph, path):
+    def highlight_links(self, colour: str, graph: nx.classes.graph.Graph, path: list) -> nx.classes.graph.Graph:
         """
         Highlight the links/edges along the path stored in "path" as "colour".
         If "colour" is None remove any exisiting colour.
@@ -205,9 +210,7 @@ class Diagram:
         tmp_g = graph.copy()
 
         # Highlight the links(s) along "path" with "colour".
-        ####################print(f"path: {path}") #####################################################
         for idx, node in enumerate(path):
-            ###############print(f"idx, node: {idx},{node}") ###########################################
             if idx < (len(path) - 1):
                 if colour:
                     tmp_g.edges[node, path[idx + 1]]["color"] = colour
@@ -218,7 +221,7 @@ class Diagram:
 
         return tmp_g
 
-    def highlight_nodes(self, colour, graph, path):
+    def highlight_nodes(self, colour: str, graph: nx.classes.graph.Graph, path: list) -> nx.classes.graph.Graph:
         """
         Highlight nodes "colour" along "path".
         If "colour" is None remove any exisiting colour.
@@ -241,7 +244,7 @@ class Diagram:
 
         return tmp_g
 
-    def highlight_src_dst(self, colour, dst, graph, src):
+    def highlight_src_dst(self, colour: str, dst: str, graph: nx.classes.graph.Graph, src: str) -> nx.classes.graph.Graph:
         """
         Highlight the "src" and "dst" nodes in "graph" "colour". If "colour" is
         None, remove any exisiting colour.
@@ -266,7 +269,7 @@ class Diagram:
 
         return tmp_g
 
-    def label_link_add_adjsid(self, graph):
+    def label_link_add_adjsid(self, graph: nx.classes.graph.Graph) -> nx.classes.graph.Graph:
         """
         Add the SR Adj-SID for each edge/link to it's existing label.
 
@@ -277,14 +280,17 @@ class Diagram:
         tmp_g = graph.copy()
 
         for edge in graph.edges():
-            if "adj_sid" in tmp_g.edges[edge[0], edge[1]]:
-                tmp_g.edges[edge[0], edge[1]]["label"] += (
-                    "\n" + str(tmp_g.edges[edge[0], edge[1]]["adj_sid"])
-                )
+            if "adj_sid" not in tmp_g.edges[edge[0], edge[1]]:
+                continue
+            if "label" not in tmp_g.edges[edge[0], edge[1]]:
+                tmp_g.edges[edge[0], edge[1]]["label"] = ""
+            tmp_g.edges[edge[0], edge[1]]["label"] += (
+                "\n" + str(tmp_g.edges[edge[0], edge[1]]["adj_sid"])
+            )
 
         return tmp_g
 
-    def label_link_weights(self, graph):
+    def label_link_weights(self, graph: nx.classes.graph.Graph) -> nx.classes.graph.Graph:
         """
         Add a label to each edge/link which is the weight of that link.
 
@@ -302,7 +308,7 @@ class Diagram:
 
         return tmp_g
 
-    def label_node_id(self, graph):
+    def label_node_id(self, graph: nx.classes.graph.Graph) -> nx.classes.graph.Graph:
         """
         Add a label to each node which is its ID.
 
@@ -313,11 +319,11 @@ class Diagram:
         tmp_g = graph.copy()
 
         for node in graph.nodes:
-            tmp_g.nodes[node]["label"] = node
+            tmp_g.nodes[node]["label"] = str(node)
 
         return tmp_g
 
-    def label_node_add_nodesid(self, graph):
+    def label_node_add_nodesid(self, graph: nx.classes.graph.Graph) -> nx.classes.graph.Graph:
         """
         Add a label to each node which is its ID.
 
@@ -328,6 +334,10 @@ class Diagram:
         tmp_g = graph.copy()
 
         for node in graph.nodes:
+            if "node_sid" not in tmp_g.nodes[node]:
+                continue
+            if "label" not in tmp_g.nodes[node]:
+                tmp_g.nodes[node]["label"] = ""
             tmp_g.nodes[node]["label"] += (
                 "\n" + str(tmp_g.nodes[node]["node_sid"])
             )

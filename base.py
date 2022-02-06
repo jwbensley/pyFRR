@@ -1,11 +1,11 @@
 import os
-from diagram import Diagram
+from diagram import diagram
 
 
-class Base:
+class base:
     """This class provides functions for the base (unmodified) topology"""
 
-    def __init__(self, debug=0):
+    def __init__(self, debug: bool = 0):
         """
         Init the Base class.
 
@@ -15,7 +15,7 @@ class Base:
         """
 
         self.debug = debug
-        self.diagram = Diagram(debug=self.debug)
+        self.diagram = diagram(debug=self.debug)
         self.path_types = ["base"]
 
     def draw(self, graph, outdir, topology):
@@ -26,8 +26,8 @@ class Base:
         :param networkx.Graph graph: NetworkX graph object
         :param str outdir: string of the root output directory path
         :param dict topology: topology paths dict
-        :return bool True: True if diagram rendered otherwise False
-        :rtype: bool
+        :return: None
+        :rtype: None
         """
 
         self.diagram.gen_sub_dirs(graph, outdir, self.path_types, topology)
@@ -38,14 +38,12 @@ class Base:
 
         self.diagram.gen_diagram("base", base_graph, os.path.join(outdir, "base"))
 
-        return
-
 
     def init_topo(self, graph, topo):
         """
         Create empty dict keys for all possible paths.
 
-        :return None:
+        :return: None
         :rtype: None
         """
 

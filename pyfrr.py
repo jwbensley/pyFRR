@@ -4,8 +4,8 @@ import networkx as nx
 import os
 import pydot
 
-from base import Base
-from diagram import Diagram
+from base import base
+from diagram import diagram
 from lfa import lfa
 from rlfa import rlfa
 from spf import spf
@@ -44,9 +44,9 @@ class pyfrr:
         :rtype: None
         """
 
-        self.base = Base(debug=debug)
+        self.base = base(debug=debug)
         self.debug = debug
-        self.diagram = Diagram(debug=debug)
+        self.diagram = diagram(debug=debug)
         self.ep_space = ep_space
         self.filename = filename
         self.filetype = filetype
