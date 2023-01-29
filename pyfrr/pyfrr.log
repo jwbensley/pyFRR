@@ -1,0 +1,66 @@
+2023-01-29 13:28:48,074|INFO|22288|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 13:28:55,267|INFO|22305|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 13:28:55,267|DEBUG|22305|from_dict|Created topology with 6 nodes and 6 edges
+2023-01-29 13:28:55,267|DEBUG|22305|to_dict|Created dict with 6 nodes and 6 edges
+2023-01-29 13:28:55,267|DEBUG|22305|create_graph|Created graph with 6 nodes and 6 edges
+2023-01-29 17:01:14,519|INFO|30067|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:01:36,270|INFO|30094|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:07:01,141|INFO|30431|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:09:59,854|INFO|30600|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:13:02,764|INFO|30811|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:14:36,414|INFO|30850|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:16:36,199|INFO|30939|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:18:07,741|INFO|31006|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:19:07,367|INFO|31034|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:20:01,908|INFO|31080|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:20:53,811|INFO|31132|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:20:53,811|DEBUG|31132|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:20:53,811|DEBUG|31132|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:20:53,812|DEBUG|31132|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:21:02,786|INFO|31143|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:21:02,786|DEBUG|31143|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:21:02,786|DEBUG|31143|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:21:02,786|DEBUG|31143|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:42:22,146|INFO|32793|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:42:22,146|DEBUG|32793|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:42:22,146|DEBUG|32793|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:42:22,147|DEBUG|32793|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:43:30,250|INFO|32874|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:43:30,250|DEBUG|32874|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:43:30,250|DEBUG|32874|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:43:30,250|DEBUG|32874|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:43:51,756|INFO|32897|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:43:51,756|DEBUG|32897|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:43:51,756|DEBUG|32897|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:43:51,757|DEBUG|32897|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:43:51,761|DEBUG|32897|calculate_paths|Calculated 542 simple paths
+2023-01-29 17:44:34,963|INFO|32954|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:44:34,963|DEBUG|32954|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:44:34,963|DEBUG|32954|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:44:34,964|DEBUG|32954|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:44:34,968|DEBUG|32954|calculate_paths|Calculated 542 simple paths
+2023-01-29 17:45:41,100|INFO|33028|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:45:41,100|DEBUG|33028|from_nx_dict|Created topology with 10 nodes and 120 edges
+2023-01-29 17:45:41,100|DEBUG|33028|to_dict|Created dict with 10 nodes and 120 edges
+2023-01-29 17:45:41,100|DEBUG|33028|create_graph|Created graph with 10 nodes and 12 edges
+2023-01-29 17:45:41,105|DEBUG|33028|calculate_paths|Calculated 542 simple paths
+2023-01-29 17:46:49,307|INFO|33091|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 17:46:49,308|DEBUG|33091|from_nx_dict|Created topology with 6 nodes and 36 edges
+2023-01-29 17:46:49,308|DEBUG|33091|to_dict|Created dict with 6 nodes and 36 edges
+2023-01-29 17:46:49,308|DEBUG|33091|create_graph|Created graph with 6 nodes and 6 edges
+2023-01-29 17:46:49,308|DEBUG|33091|calculate_paths|Calculated 60 simple paths
+2023-01-29 18:04:10,384|INFO|33732|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 18:04:10,384|DEBUG|33732|from_nx_dict|Created topology with 6 nodes and 36 edges
+2023-01-29 18:04:10,384|DEBUG|33732|to_dict|Created dict with 6 nodes and 36 edges
+2023-01-29 18:04:10,384|DEBUG|33732|create_graph|Created graph with 6 nodes and 6 edges
+2023-01-29 18:04:20,665|INFO|33746|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 18:04:20,665|DEBUG|33746|from_nx_dict|Created topology with 6 nodes and 36 edges
+2023-01-29 18:04:20,665|DEBUG|33746|to_dict|Created dict with 6 nodes and 36 edges
+2023-01-29 18:04:20,665|DEBUG|33746|create_graph|Created graph with 6 nodes and 6 edges
+2023-01-29 18:04:20,665|DEBUG|33746|calculate_paths|Calculated 60 simple paths
+2023-01-29 18:20:55,944|INFO|34766|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr/pyfrr.log at level DEBUG
+2023-01-29 18:20:55,944|DEBUG|34766|from_nx_dict|Created topology with 6 nodes and 36 edges
+2023-01-29 18:20:55,944|DEBUG|34766|to_dict|Created dict with 6 nodes and 36 edges
+2023-01-29 18:20:55,944|DEBUG|34766|create_graph|Created graph with 6 nodes and 6 edges
+2023-01-29 18:20:55,944|DEBUG|34766|calculate_all_paths|Calculated 60 <class 'pyfrr.all_paths.AllPaths'> paths
+2023-01-29 18:20:55,944|DEBUG|34766|calculate_all_paths|Calculated 60 <class 'pyfrr.spf.Spf'> paths

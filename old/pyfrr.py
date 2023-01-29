@@ -6,7 +6,7 @@ import pydot
 
 from base import base
 from diagram import diagram
-from lfa import lfa
+from old.lfa import lfa
 from rlfa import rlfa
 from spf import spf
 from tilfa import tilfa
