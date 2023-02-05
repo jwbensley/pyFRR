@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 
-class Edge:
+class Edge(object):
     local: Node
     remote: Node
     adj_sid: int | None = None
@@ -32,6 +32,14 @@ class Edge:
                 raise ValueError(f"weight must be int not {type(weight)}")
             self.weight = weight
 
+    def __repr__(self) -> str:
+        attrs: Dict = {}
+        if self.adj_sid:
+            attrs["adj_sid"] = self.adj_sid
+        if self.weight:
+            attrs["weight"] = self.weight
+        return f"{self.local} -> {self.remote}: {attrs}"
+
     def to_dict(self) -> Dict:
         """
         Return a JSON serializable dict of the Edge
@@ -59,21 +67,27 @@ class Edge:
         return new_edge
 
 
-class Node:
+class Node(object):
     edges: Dict[str, List[Edge]] = {}
     name: str
+    neighbours: List[Node] = []
     node_sid: int | None = None
 
     def __init__(
         self,
         name: str,
         edges: Dict[str, List[Edge]] = {},
+        neighbours: List = [],
         node_sid: int | None = None,
     ) -> None:
         """
         Init a new Node
 
         :param str name: Name of new node
+        :param Dict edges: List of edges
+        :param List neighbours: List of direct neighbour nodes
+        :param int node_sid: SR node SID
+        :rtype: None
         """
         if not name:
             raise ValueError("Name required to create new node")
@@ -83,6 +97,13 @@ class Node:
             if not type(edges) == dict:
                 raise TypeError(f"edges must be dict not {type(edges)}")
             self.edges = edges
+
+        if neighbours:
+            if not type(neighbours) == list:
+                raise TypeError(
+                    f"neighbours must be list not {type(neighbours)}"
+                )
+            self.neighbours = neighbours
 
         if node_sid:
             if not type(node_sid) == int:
@@ -119,6 +140,17 @@ class Node:
             for edge in self.edges[node_name]:
                 edges.append(edge.to_dict())
         return edges
+
+    def edges_toward_node(self, node: Node) -> List[Edge]:
+        """
+        Return the list of edges towards 'node'
+
+        :param Node node: Node obj the local node has edges to
+        :rtype: List
+        """
+        if node.name in self.edges:
+            return self.edges[node.name]
+        return []
 
     @staticmethod
     def from_nx_dict(node: Dict) -> Node:

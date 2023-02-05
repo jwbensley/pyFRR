@@ -3,14 +3,13 @@ from typing import Dict, List
 
 import networkx
 
-from .path import Path
+from .path import EdgePath, EdgePaths, NodePath, NodePaths
 from .topology import Topology
 
 
 class AllPaths:
     topology: Topology
-    # paths = {"source": {"target": [ path1, path2 ] } }
-    paths: Dict[str, Dict[str, List[Path]]] = {}
+    paths: Dict[str, Dict[str, NodePaths]]  ###### type hinting mess !!!!
 
     def __init__(self, topology: Topology) -> None:
         self.topology = topology
@@ -31,39 +30,55 @@ class AllPaths:
 
     def calculate_all_paths(self) -> None:
         """
-        Calculate all paths between all nodes in the topology
+        Calculate all node paths and edge paths, between all nodes in the
+        topology
 
         :rtype: None
         """
+        self.paths = {}
         for src in self.topology.nodes:
-            if src not in self.paths:
-                self.paths[src] = {}
+            self.paths[src] = {}
             for dst in self.topology.nodes:
                 if src == dst:
                     continue
-                if dst not in self.paths[src]:
-                    self.paths[src][dst] = self.get_paths(src, dst)
+                if src == "PE1" and dst == "PE5":
+                    self.paths[src][dst] = self.get_node_paths(src, dst)
+                    print(f"There are {len(self.paths[src][dst])} node paths")
+                    for node_path in self.paths[src][dst]:
+                        print(f"This node path is {len(node_path)} nodes long")
+                        print(f"It has {node_path.no_edge_paths()} edge_paths")
+                        for edge_path in node_path.edge_paths:
+                            print(f"edge_path: {edge_path}")
 
-        logging.debug(f"Calculated {len(self)} {type(self)} paths")
+        logging.info(f"Calculated {len(self)} {type(self)} paths")
 
-    def get_paths(self, source: str, target: str) -> List[Path]:
+    def get_node_paths(self, source: str, target: str) -> NodePaths:
         """
-        Return all the paths between source and target
+        Return all the node paths between source and target
 
         :param str source: Source node name in graph
         :param str target: Destination node name in graph
         :rtype: List
         """
 
-        # A simple path is a path with no repeated nodes.
-        paths: List = []
-        simple_path: List
-        for simple_path in networkx.all_simple_paths(
-            self.topology.graph, source=source, target=target
-        ):
-            paths.append(Path.from_nx_list(simple_path, self.topology))
+        #  A NetworkX "simple path" is a path with no repeated nodes.
+        node_paths: NodePaths = NodePaths()
+        simple_path: List[str]
+        all_simple_paths: List[List] = list(
+            networkx.all_simple_paths(
+                self.topology.graph, source=source, target=target
+            )
+        )
 
-        return paths
+        logging.debug(
+            f"{len(all_simple_paths)} simple paths between {source} and "
+            f"{target}"
+        )
+        for simple_path in all_simple_paths:
+            node_list: List = self.topology.node_list_from_str(simple_path)
+            node_paths.add_node_path(NodePath(node_list))
+
+        return node_paths
 
         """
         HOW TO ADD IN SRLGs? #############################################################################

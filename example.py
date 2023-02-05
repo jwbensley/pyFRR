@@ -27,7 +27,9 @@ def parse_cli_args() -> Dict:
         help="Topology file to parse",
         type=str,
         required=False,
-        default="old/example/ring.json",
+        default="pyfrr/tests/ecmp1.json",
+        # default="pyfrr/tests/test_topology.json",
+        # default="old/example/ring.json",
     )
 
     return vars(parser.parse_args())

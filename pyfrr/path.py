@@ -1,37 +1,292 @@
 from __future__ import annotations
 
-from typing import List
-
-from .node import Edge
+from typing import Dict, Iterator, List
+import logging
+from .node import Edge, Node
 from .topology import Topology
 
 
-class Path:
-    dst: str
-    cost: int | None = None
-    src: str
-    path: List[Edge]
+class EdgePath(object):
+    """
+    A list of edges along a NodePath
+    """
 
-    def __init__(
-        self,
-        path: List[Edge],
-        cost: int | None = None,
-    ) -> None:
-
-        self.path = path  ###### needs to be a list of edges
-        self.source = path[0]  ###### Needs to be a node not an edge
-        self.target = path[-1]  ###### Needs to be a node not an edge
-        if cost:
-            if type(cost) != int:
-                raise ValueError(f"cost must be int not {type(cost)}")
-            self.cost = cost
-
-    @staticmethod
-    def from_nx_list(path: List, topology: Topology) -> Path:
-        return Path(path=[topology.nodes[node_name] for node_name in path])
-
-    @staticmethod
-    def from_nx_list_spf(cost: int, path: List, topology: Topology) -> Path:
-        return Path(
-            cost=cost, path=[topology.nodes[node_name] for node_name in path]
+    def __init__(self, edge_path: List[Edge] = []) -> None:
+        self.edge_path: List[Edge] = edge_path
+        logging.debug(
+            f"Init'd EdgePath {hex(id(self))} with {len(self)} edges: {self}"
         )
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return self.edge_path[index.start:index.stop:index.step]
+        return self.edge_path[index]
+
+    def __len__(self) -> int:
+        return len(self.edge_path)
+
+    def __repr__(self):
+        return str([str(edge) for edge in self.edge_path])
+
+    def append(self, edge: Edge) -> None:
+        """
+        Add a new edge to this edge path
+
+        :param Edge edge: New Edge obj to add
+        :rtype: None
+        """
+        if edge not in self.edge_path:
+            self.edge_path.append(edge)
+
+    def copy(self) -> EdgePath:
+        """
+        Return a copy of this obj
+
+        :rtype: EdgePath
+        """
+        return EdgePath(self.edge_path.copy())
+
+    def pop(self, i: int = -1) -> Edge:
+        """
+        Remove the edge at index i from this edge path and return it
+
+        :param int i: Edge index to remove from list
+        :rtype: None
+        """
+        return self.edge_path.pop(-1)
+
+    def source(self) -> Node:
+        """
+        The first node in the edge path
+
+        :rtype: Node
+        """
+        return self.edge_path[0].local
+
+    def target(self) -> Node:
+        """
+        The last node in the edge path
+
+        :rtype: Node
+        """
+        return self.edge_path[-1].remote
+
+    def weight(self) -> int:
+        """
+        Return the total weight of this EdgePath
+
+        :rtype: int
+        """
+        total: int = 0
+        edge: Edge
+        for edge in self.edge_path:
+            total += edge.weight
+        return total
+
+
+class EdgePaths(object):
+    """
+    A list of EdgePath's in weight order
+    """
+
+    def __init__(self, edge_paths: List[EdgePath] = []) -> None:
+        self.edge_paths: List[EdgePath] = []
+
+        for edge_path in edge_paths:
+            self.add_edge_path(edge_path)
+        logging.debug(
+            f"Init'd EdgePaths {hex(id(self))} with {len(self)} edge paths: "
+            f"{self}"
+        )
+
+    def __getitem__(self, index):
+        return self.edge_paths[index]
+
+    def __len__(self) -> int:
+        return len(self.edge_paths)
+    
+    def __repr__(self) -> str:
+        return str([str(edge_path) for edge_path in self.edge_paths])
+
+    def add_edge_path(self, edge_path) -> None:
+        """
+        Add the new edge path in descending weight order
+
+        :param EdgeParth edge_path: The new edge path to be added
+        :rtype: None
+        """
+        for i, existing_path in enumerate(self.edge_paths):
+            if edge_path.weight() <= existing_path.weight():
+                self.edge_paths.insert(i, edge_path)
+                return
+        self.edge_paths.append(edge_path)
+
+
+    @staticmethod
+    def expand_node_path(
+        all_edge_paths: List,
+        edge_path: EdgePath,
+        node_path: NodePath,
+    ) -> List:
+        """
+        Recursively (DFS) expand a node path to a list of edge paths along the
+        node path.
+
+        :param List all_edge_paths: The list of all edge paths
+        :param Edgepath edge_path: The edge path currently being expanded
+        :param NodePath node_path: The list of nodes to expand into edges
+        :rtype: List
+        """
+        if len(node_path) < 2:
+            return []
+
+        for edge in node_path.edges(0):
+            edge_path.append(edge)
+            ret: List = EdgePaths.expand_node_path(
+                all_edge_paths=all_edge_paths,
+                edge_path=edge_path,
+                node_path=NodePath(node_path[1:]),
+            )
+            if not ret:
+                all_edge_paths.append(edge_path.copy())
+                edge_path.pop()
+            else:
+                all_edge_paths = ret
+
+        if len(edge_path) > 0:
+            edge_path.pop()
+        return all_edge_paths
+
+    @staticmethod
+    def from_node_path(node_path: NodePath) -> EdgePaths:
+        """
+        Return all the edge paths for the NodePath
+
+        :param NodePath node_path: A NodePath obj
+        :rtype: EdgePaths
+        """
+        if len(node_path) > 1:
+            logging.debug(f"Going to expand node path {node_path}")
+            return EdgePaths(EdgePaths.expand_node_path([], EdgePath(edge_path=[]), node_path))
+        return EdgePaths()
+
+
+class NodePath(object):
+    """
+    A list of nodes (from source to target) and the list of edge paths between
+    these two nodes
+    """
+
+    def __init__(self, node_path: List[Node] = []) -> None:
+        self.node_path: List[Node] = node_path
+        self.edge_paths: EdgePaths
+
+        for node in node_path:
+            self.add_node(node)
+        logging.debug(
+            f"Init'd NodePath {hex(id(self))} with {len(self)} nodes: {self}"
+        )
+        self.update_edge_paths()
+
+    def __getitem__(self, index: slice | int) -> NodePath | Node:
+        if isinstance(index, slice):
+            return NodePath(self.node_path[index.start:index.stop:index.step])
+        return self.node_path[index]
+    
+    def __iter__(self) -> Iterator:
+        return self.node_path.__iter__()
+
+    def __len__(self) -> int:
+        return len(self.node_path)
+
+    def __repr__(self):
+        return str([str(node) for node in self.node_path])
+    
+    def add_node(self, node: Node) -> None:
+        """
+        Add a new node to the end of the node path
+        :param Node node: New node obj to append
+        :rtype: None
+        """
+        if node not in self.node_path:
+            self.node_path.append(node)
+
+    def edges(self, i: int) -> List[Edge]:
+        """
+        Return the list of edges at the given index in the node path
+        """
+        return self.node_path[i].edges_toward_node(self.node_path[i + 1])
+
+    def no_edge_paths(self) -> int:
+        """
+        The number of edge paths between the source and target node
+
+        :rtype: int
+        """
+        return len(self.edge_paths)
+
+    def source(self) -> Node:
+        """
+        The first node in this node path
+
+        :rtype: Node
+        """
+        return self.node_path[0]
+
+    def target(self) -> Node:
+        """
+        The last node in this node path
+
+        :rtype: Node
+        """
+        return self.node_path[-1]
+
+    def update_edge_paths(self) -> None:
+        """
+        Update the edge paths for this node path
+
+        :rtype: None
+        """
+        self.edge_paths = EdgePaths.from_node_path(self)
+
+
+class NodePaths(object):
+    """
+    A list of NodePath's between the same source and target
+    """
+
+    def __init__(self, node_paths: List[NodePath] = []) -> None:
+        self.node_paths: List[NodePath] = node_paths
+
+        for node_path in node_paths:
+            self.add_node_path(node_path)
+        logging.debug(
+            f"Init'd NodePaths {hex(id(self))} with {len(self)} node paths"
+        )
+
+    def __getitem__(self, index: slice | int)-> NodePaths | NodePath:
+        if isinstance(index, slice):
+            return NodePaths(self.node_paths[index.start:index.stop:index.step])
+        return self.node_paths[index]
+
+    def __len__(self) -> int:
+        return len(self.node_paths)
+
+    def __repr__(self):
+        return str([str(node_path) for node_path in self.node_paths])
+
+    def add_node_path(self, node_path: NodePath) -> None:
+        if self.node_paths:
+            if (
+                node_path.source() != self.node_paths[0].source()
+                or node_path.target() != self.node_paths[0].target()
+            ):
+                raise ValueError(
+                    f"Source and target nodes of new path ({node_path.source()}"
+                    f" -> {node_path.targer()}) don't match existing paths ("
+                    f"{self.node_paths[0].source()} -> "
+                    f"{self.node_paths[-1].target()})"
+                )
+
+        if node_path not in self.node_paths:
+            self.node_paths.append(node_path)

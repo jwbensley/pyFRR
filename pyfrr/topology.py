@@ -1,7 +1,7 @@
 import json
 import logging
 from io import TextIOWrapper
-from typing import Dict
+from typing import Dict, List
 
 import networkx
 
@@ -75,7 +75,7 @@ class Topology:
         self.graph = networkx.Graph
 
         """
-        Add in the fields required by NetworkX
+        Add in the fields required by NetworkX.
         """
         if "directed" in topology:
             self.directed = topology["directed"]
@@ -90,7 +90,9 @@ class Topology:
         for node in topology["nodes"]:
             if node["id"] not in self.nodes:
                 self.nodes[node["id"]] = Node.from_nx_dict(node)
-                self.nodes[node["id"]].add_edges_from_nx_dict(topology["links"])
+                self.nodes[node["id"]].add_edges_from_nx_dict(
+                    topology["links"]
+                )
 
         logging.debug(
             f"Created topology with {self.no_of_nodes()} nodes and "
@@ -154,6 +156,15 @@ class Topology:
         :rtype: int
         """
         return len(self.nodes)
+
+    def node_list_from_str(self, node_path: List[str]) -> List[Node]:
+        """
+        Return a list of node obj's given a list of node names
+
+        :param List node_path: List of node names
+        :rtype: List
+        """
+        return [self.nodes[node] for node in node_path]
 
     def to_dict(self) -> Dict:
         """
