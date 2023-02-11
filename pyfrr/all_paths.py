@@ -35,16 +35,16 @@ class AllPaths:
         :rtype: None
         """
         self.paths = {}
-        for source in self.topology.node_names():
+        for source in self.topology.get_node_names():
             self.paths[source] = {}
-            for target in self.topology.node_names():
+            for target in self.topology.get_node_names():
                 if source == target:
                     continue
                 self.paths[source][target] = self.all_simple_paths(
                     all_paths=NodePaths(node_paths=[]),
                     current_path=[],
-                    source=source,
-                    target=target,
+                    source=self.topology.get_node_by_name(source),
+                    target=self.topology.get_node_by_name(target),
                 )
                 print(
                     f"There are {len(self.paths[source][target])} node paths between {source} and {target}"
@@ -83,31 +83,42 @@ class AllPaths:
             current_path.append(source)
             print(f"Initiallised current_path with {source}")
 
-        if not current_path[-1].neighbours:
+        if not current_path[-1].get_neighbours():
             print(f"Returning empty path")
             return NodePaths()
 
         print(
-            f"{current_path[-1]} has neighbours {current_path[-1].neighbours}"
+            f"{current_path[-1]} has neighbours {current_path[-1].get_neighbours()}"
         )
-        for neighbour in current_path[-1].neighbours:
-            print(f"Current path is {current_path}, neighbour is {neighbour}")
+        for neighbour in current_path[-1].get_neighbours():
+            print(
+                f"Current path is {current_path}, current neighbour is {neighbour}"
+            )
             if neighbour not in current_path:
                 current_path.append(neighbour)
                 print(f"Added {neighbour} to current path")
                 if neighbour == target:
-                    print(f"Added new finished path: {current_path.copy()}")
                     all_paths.add_node_path(NodePath(current_path.copy()))
+                    print(
+                        f"Added new finished path (1): {current_path.copy()}"
+                    )
                     current_path.pop()
                     continue
                 ret: List = self.all_simple_paths(
                     all_paths, current_path, source, target
                 )
                 if not ret:
+                    if current_path[-1] != target:
+                        return all_paths
                     all_paths.add_node_path(NodePath(current_path.copy()))
+                    print(
+                        f"Added new finished path (2): {current_path.copy()}"
+                    )
                     current_path.pop()
                 else:
                     all_paths = ret
+            else:
+                return all_paths
 
         if len(current_path) > 0:
             current_path.pop()

@@ -15,7 +15,7 @@ class Topology:
     def __str__(self) -> str:
         data: Dict = {}
         for node in self.nodes:
-            data[node.name] = self.nodes[node].to_dict()
+            data[node.get_name()] = self.nodes[node].to_dict()
         return json.dumps(data, indent=2)
 
     def add_node(self, node: Node) -> None:
@@ -25,8 +25,8 @@ class Topology:
         :param Node node: Node object to add
         :rtype: None
         """
-        if node.name not in self.nodes:
-            self.nodes[node.name] = node
+        if node.get_name() not in self.nodes:
+            self.nodes[node.get_name()] = node
 
     def edge_from_nx_edge(self, nx_edge: Dict) -> Edge:
         """
@@ -55,24 +55,41 @@ class Topology:
         self.topology_file = ""
         self.nodes = {}
 
+        """
+        Load all the node objects
+        """
         nx_node: Dict
         for nx_node in topology["nodes"]:
             self.nodes[nx_node["id"]] = self.node_from_nx_node(nx_node)
 
+        """
+        Load all the edge objects
+        """
         nx_edge: Dict
         for nx_edge in topology["links"]:
             edge = self.edge_from_nx_edge(nx_edge)
-            if edge.local.name not in self.nodes:
+            if edge.local.get_name() not in self.nodes:
                 logging.error(
                     f"Can't add link from {edge.local} to {edge.remote}, "
                     f"{edge.local} is not in topology"
                 )
-            elif edge.remote.name not in self.nodes:
+            elif edge.remote.get_name() not in self.nodes:
                 logging.error(
                     f"Can't add link from {edge.local} to {edge.remote}, "
                     f"{edge.remote} is not in topology"
                 )
-            self.nodes[edge.local.name].add_edge(edge)
+            self.nodes[edge.local.get_name()].add_edge(edge)
+
+        """
+        Add any missing edges which were only created in one direction
+        """
+        for node in self.get_nodes():
+            for neighbour in node.get_neighbours():
+                if not node.edges_toward_node(neighbour):
+                    for edge in neighbour.edges_toward_node(node):
+                        new_edge = edge.copy()
+                        new_edge.swap_nodes()
+                        node.add_edge(new_edge)
 
         logging.debug(
             f"Created topology with {self.no_of_nodes()} nodes and "
@@ -129,6 +146,22 @@ class Topology:
             return self.nodes[name]
         raise ValueError(f"Node {name} not found")
 
+    def get_node_names(self) -> List[str]:
+        """
+        Return the list of node names in the topology
+
+        :rtype: List
+        """
+        return self.nodes.keys()
+
+    def get_nodes(self) -> List[Node]:
+        """
+        Return a list of all nodes in the topology
+
+        :rtype: List
+        """
+        return self.nodes.values()
+
     def no_of_edges(self) -> int:
         """
         Return the number of edges in the topology
@@ -170,14 +203,6 @@ class Topology:
         :rtype: List
         """
         return [self.nodes[node] for node in node_path]
-
-    def node_names(self) -> List[str]:
-        """
-        Return the list of node names in the topology
-
-        :rtype: List
-        """
-        return self.nodes.values()
 
     def to_dict(self) -> Dict:
         """

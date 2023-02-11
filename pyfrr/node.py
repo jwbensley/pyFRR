@@ -35,6 +35,29 @@ class Edge(object):
             attrs["weight"] = self.weight
         return f"{self.local} -> {self.remote}: {attrs}"
 
+    def copy(self) -> Edge:
+        """
+        Return a copy of this Edge
+
+        :rtype: Edge
+        """
+        return Edge(
+            local=self.local,
+            remote=self.remote,
+            adj_sid=self.adj_sid,
+            weight=self.weight,
+        )
+
+    def swap_nodes(self) -> None:
+        """
+        Reverse the source and targets of this edge
+
+        :rtype: None
+        """
+        temp: Node = self.local
+        self.local = self.remote
+        self.remote = temp
+
     def to_dict(self) -> Dict:
         """
         Return a JSON serializable dict of the Edge
@@ -109,11 +132,11 @@ class Node(object):
         if neighbour not in self.neighbours:
             self.neighbours.append(neighbour)
 
-    def all_edges(self) -> Dict:
-        """
-        Return all the edges of this node
-        """
-        return self.edges
+    # def all_edges(self) -> Dict:
+    #    """
+    #    Return all the edges of this node
+    #    """
+    #    return self.edges
 
     def edges_to_list(self) -> List:
         """
@@ -139,6 +162,22 @@ class Node(object):
         if node in self.edges:
             return self.edges[node]
         return []
+
+    def get_name(self) -> str:
+        """
+        Return the name of this node
+
+        :rtype: str
+        """
+        return self.name
+
+    def get_neighbours(self) -> List[Node]:
+        """
+        Return a list of neighbours
+
+        :rtype: List
+        """
+        return self.neighbours
 
     def no_of_edges(self) -> int:
         """
