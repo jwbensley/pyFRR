@@ -4,11 +4,6 @@ from typing import Dict, List
 
 
 class Edge(object):
-    local: Node
-    remote: Node
-    adj_sid: int | None = None
-    weight: int | None = None
-
     def __init__(
         self,
         local: Node,
@@ -22,15 +17,15 @@ class Edge(object):
         self.local = local
         self.remote = remote
 
-        if adj_sid:
-            if type(adj_sid) != int:
-                raise ValueError(f"adj_sid must be int not {type(adj_sid)}")
-            self.adj_sid = adj_sid
+        if type(adj_sid) != int and type(adj_sid) != None:
+            raise ValueError(
+                f"adj_sid must be int or None, not {type(adj_sid)}"
+            )
+        self.adj_sid = adj_sid
 
-        if weight:
-            if type(weight) != int:
-                raise ValueError(f"weight must be int not {type(weight)}")
-            self.weight = weight
+        if type(weight) != int and weight != None:
+            raise ValueError(f"weight must be int or None, not {type(weight)}")
+        self.weight = weight
 
     def __repr__(self) -> str:
         attrs: Dict = {}
@@ -51,40 +46,20 @@ class Edge(object):
             "weight": self.weight,
         }
 
-    @staticmethod
-    def from_nx_dict(edge: Dict) -> Edge:
-        """
-        Return a new Edge obj from a dict using networkx syntax
-
-        :param Dict edge: Edge obj serialised as dict in networkx format
-        :rtype: Edge
-        """
-        new_edge: Edge = Edge(local=edge["source"], remote=edge["target"])
-        if "adj_sid" in edge:
-            new_edge.adj_sid = edge["adj_sid"]
-        if "weight" in edge:
-            new_edge.weight = edge["weight"]
-        return new_edge
-
 
 class Node(object):
-    edges: Dict[str, List[Edge]] = {}
-    name: str
-    neighbours: List[Node] = []
-    node_sid: int | None = None
-
     def __init__(
         self,
         name: str,
-        edges: Dict[str, List[Edge]] = {},
-        neighbours: List = [],
+        edges: Dict[Node, List[Edge]] = {},
+        neighbours: List[Node] = [],
         node_sid: int | None = None,
     ) -> None:
         """
         Init a new Node
 
         :param str name: Name of new node
-        :param Dict edges: List of edges
+        :param Dict edges: Dict of edges towards each neighbour node
         :param List neighbours: List of direct neighbour nodes
         :param int node_sid: SR node SID
         :rtype: None
@@ -93,39 +68,52 @@ class Node(object):
             raise ValueError("Name required to create new node")
         self.name = str(name)
 
-        if edges:
-            if not type(edges) == dict:
-                raise TypeError(f"edges must be dict not {type(edges)}")
-            self.edges = edges
+        if not type(edges) == dict:
+            raise TypeError(f"edges must be dict not {type(edges)}")
+        self.edges = edges
 
-        if neighbours:
-            if not type(neighbours) == list:
-                raise TypeError(
-                    f"neighbours must be list not {type(neighbours)}"
-                )
-            self.neighbours = neighbours
+        if not type(neighbours) == list:
+            raise TypeError(f"neighbours must be list not {type(neighbours)}")
+        self.neighbours = neighbours
 
-        if node_sid:
-            if not type(node_sid) == int:
-                raise TypeError(f"node_sid must be int not {type(node_sid)}")
-            self.node_sid = node_sid
+        if type(node_sid) != int and node_sid != None:
+            raise TypeError(
+                f"node_sid must be int or None, not {type(node_sid)}"
+            )
+        self.node_sid = node_sid
 
     def __str__(self) -> str:
         return self.name
 
-    def add_edges_from_nx_dict(self, edges: List) -> None:
+    def add_edge(self, edge: Edge) -> None:
         """
-        Add a edges to this node from a list of networkx formatted dicts
+        Add a new edge toward a specific neighbour
 
-        :param List edges: An list of dict of edges in networktx format
+        :param Edge edge: The new edge to add
         :rtype: None
         """
-        edge: Dict
-        for edge in edges:
-            if edge["source"] == self.name:
-                if edge["target"] not in self.edges:
-                    self.edges[edge["target"]] = []
-                self.edges[edge["target"]].append(Edge.from_nx_dict(edge))
+        if edge.remote not in self.edges:
+            self.edges[edge.remote] = []
+            self.add_neighbour(edge.remote)
+            edge.remote.add_neighbour(edge.local)
+        if edge not in self.edges[edge.remote]:
+            self.edges[edge.remote].append(edge)
+
+    def add_neighbour(self, neighbour: Node) -> None:
+        """
+        Add a new neighbour to the lis tof neighbours
+
+        :param Node neighbour: New neighbour to add
+        :rtype: None
+        """
+        if neighbour not in self.neighbours:
+            self.neighbours.append(neighbour)
+
+    def all_edges(self) -> Dict:
+        """
+        Return all the edges of this node
+        """
+        return self.edges
 
     def edges_to_list(self) -> List:
         """
@@ -134,10 +122,10 @@ class Node(object):
         :rtype: list
         """
         edges: List = []
-        node_name: str
-        for node_name in self.edges:
+        node: Node
+        for node in self.edges:
             edge: Edge
-            for edge in self.edges[node_name]:
+            for edge in self.edges[node]:
                 edges.append(edge.to_dict())
         return edges
 
@@ -148,22 +136,9 @@ class Node(object):
         :param Node node: Node obj the local node has edges to
         :rtype: List
         """
-        if node.name in self.edges:
-            return self.edges[node.name]
+        if node in self.edges:
+            return self.edges[node]
         return []
-
-    @staticmethod
-    def from_nx_dict(node: Dict) -> Node:
-        """
-        Return a new Node obj from a dict using networkx syntax
-
-        :param Dict node: Node obj serialised as dict in networkx format
-        :rtype: Node
-        """
-        new_node = Node(name=node["id"])
-        if "node_sid" in node:
-            new_node.node_sid = node["node_sid"]
-        return new_node
 
     def no_of_edges(self) -> int:
         """
@@ -172,9 +147,9 @@ class Node(object):
         :rtype: int
         """
         count: int = 0
-        node_name: str
-        for node_name in self.edges:
-            count += len(self.edges[node_name])
+        node: Node
+        for node in self.edges:
+            count += len(self.edges[node])
         return count
 
     def node_to_dict(self) -> Dict:

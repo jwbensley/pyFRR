@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, List
+from typing import Iterator, List
 import logging
 from .node import Edge, Node
-from .topology import Topology
 
 
 class EdgePath(object):
@@ -19,7 +18,7 @@ class EdgePath(object):
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            return self.edge_path[index.start:index.stop:index.step]
+            return self.edge_path[index.start : index.stop : index.step]
         return self.edge_path[index]
 
     def __len__(self) -> int:
@@ -104,7 +103,7 @@ class EdgePaths(object):
 
     def __len__(self) -> int:
         return len(self.edge_paths)
-    
+
     def __repr__(self) -> str:
         return str([str(edge_path) for edge_path in self.edge_paths])
 
@@ -120,7 +119,6 @@ class EdgePaths(object):
                 self.edge_paths.insert(i, edge_path)
                 return
         self.edge_paths.append(edge_path)
-
 
     @staticmethod
     def expand_node_path(
@@ -167,7 +165,11 @@ class EdgePaths(object):
         """
         if len(node_path) > 1:
             logging.debug(f"Going to expand node path {node_path}")
-            return EdgePaths(EdgePaths.expand_node_path([], EdgePath(edge_path=[]), node_path))
+            return EdgePaths(
+                EdgePaths.expand_node_path(
+                    [], EdgePath(edge_path=[]), node_path
+                )
+            )
         return EdgePaths()
 
 
@@ -181,8 +183,8 @@ class NodePath(object):
         self.node_path: List[Node] = node_path
         self.edge_paths: EdgePaths
 
-        for node in node_path:
-            self.add_node(node)
+        #####for node in node_path:
+        #####    self.add_node(node)
         logging.debug(
             f"Init'd NodePath {hex(id(self))} with {len(self)} nodes: {self}"
         )
@@ -190,9 +192,11 @@ class NodePath(object):
 
     def __getitem__(self, index: slice | int) -> NodePath | Node:
         if isinstance(index, slice):
-            return NodePath(self.node_path[index.start:index.stop:index.step])
+            return NodePath(
+                self.node_path[index.start : index.stop : index.step]
+            )
         return self.node_path[index]
-    
+
     def __iter__(self) -> Iterator:
         return self.node_path.__iter__()
 
@@ -201,7 +205,7 @@ class NodePath(object):
 
     def __repr__(self):
         return str([str(node) for node in self.node_path])
-    
+
     def add_node(self, node: Node) -> None:
         """
         Add a new node to the end of the node path
@@ -264,13 +268,21 @@ class NodePaths(object):
             f"Init'd NodePaths {hex(id(self))} with {len(self)} node paths"
         )
 
-    def __getitem__(self, index: slice | int)-> NodePaths | NodePath:
+    def __getitem__(self, index: slice | int) -> NodePaths | NodePath:
         if isinstance(index, slice):
-            return NodePaths(self.node_paths[index.start:index.stop:index.step])
+            return NodePaths(
+                self.node_paths[index.start : index.stop : index.step]
+            )
         return self.node_paths[index]
+
+    def __iter__(self) -> Iterator:
+        return self.node_paths.__iter__()
 
     def __len__(self) -> int:
         return len(self.node_paths)
+
+    def __nonzero__(self) -> bool:
+        return bool(self.node_paths)
 
     def __repr__(self):
         return str([str(node_path) for node_path in self.node_paths])
@@ -283,7 +295,7 @@ class NodePaths(object):
             ):
                 raise ValueError(
                     f"Source and target nodes of new path ({node_path.source()}"
-                    f" -> {node_path.targer()}) don't match existing paths ("
+                    f" -> {node_path.target()}) don't match existing paths ("
                     f"{self.node_paths[0].source()} -> "
                     f"{self.node_paths[-1].target()})"
                 )
