@@ -7,7 +7,6 @@ from pyfrr.pyfrr import PyFrr
 
 
 def parse_cli_args() -> Dict:
-
     parser = argparse.ArgumentParser(
         description="Parse graph topology data and calculate paths between "
         "nodes in the graph",
@@ -28,8 +27,9 @@ def parse_cli_args() -> Dict:
         type=str,
         required=False,
         default="pyfrr/tests/ecmp1.json",
-        #default="pyfrr/tests/test_topology.json",
-        #default="old/example/ring.json",
+        # default="pyfrr/tests/test_topology.json",
+        # default="old/example/ring.json",
+        # default="old/example/mesh_topo.json",
     )
 
     return vars(parser.parse_args())

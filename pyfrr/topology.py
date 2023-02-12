@@ -31,6 +31,7 @@ class Topology:
     def edge_from_nx_edge(self, nx_edge: Dict) -> Edge:
         """
         Return an Edge obj from an NX formatted dict
+
         :param Dict nx_edge: An NX syntax link object
         :rtype: Edge
         """

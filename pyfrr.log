@@ -1,4 +1,0 @@
-2023-01-29 13:23:22,963|INFO|21676|setup|Starting logging to /home/bensley/github/pyFRR/pyfrr.log at level DEBUG
-2023-01-29 13:23:22,963|DEBUG|21676|from_dict|Created topology with 6 nodes and 6 edges
-2023-01-29 13:23:22,963|DEBUG|21676|to_dict|Created dict with 6 nodes and 6 edges
-2023-01-29 13:23:22,963|DEBUG|21676|create_graph|Created graph with 6 nodes and 6 edges

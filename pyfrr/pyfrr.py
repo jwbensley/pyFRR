@@ -1,13 +1,14 @@
 from .all_paths import AllPaths
 from .log import Logger
-#from .spf import Spf
+
+# from .spf import Spf
 from .topology import Topology
 
 
 class PyFrr:
     topology: Topology = Topology()
     all_paths: AllPaths
-    #spf: Spf
+    # spf: Spf
 
     def __init__(self) -> None:
         Logger.setup()

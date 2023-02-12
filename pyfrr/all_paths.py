@@ -12,7 +12,7 @@ class AllPaths:
 
     def __init__(self, topology: Topology) -> None:
         self.topology = topology
-        self.calculate_all_paths()
+        self.calculate_paths()
 
     def __len__(self) -> int:
         """
@@ -27,7 +27,49 @@ class AllPaths:
                 count += len(self.paths[source][target])
         return count
 
-    def calculate_all_paths(self) -> None:
+    def all_simple_paths(
+        self,
+        all_paths: NodePaths,
+        current_path: List[Node],  ######## Should be a NodePath - FIXME
+        source: Node,
+        target: Node,
+    ) -> NodePaths:
+        """
+        Return a NodePaths list of simple paths from source to target.
+        This is a recursive depth first search, all_paths and current_path
+        are not meant to be the passed in the initial call.
+
+        :param NodePaths all_paths: Accruing list of all simple paths to target
+        :param List current_path: The current path being searched
+        :param Node source: Source node in the topology
+        :param Node target: Target node in the topology
+        :rtype: NodePaths
+        """
+
+        if current_path == []:
+            current_path.append(source)
+
+        for neighbour in [
+            n
+            for n in current_path[-1].get_neighbours()
+            if n not in current_path
+        ]:
+            current_path.append(neighbour)
+
+            if neighbour == target:
+                all_paths.add_node_path(
+                    NodePath(node_path=current_path.copy())
+                )
+                current_path.pop()
+                continue
+
+            self.all_simple_paths(all_paths, current_path, source, target)
+
+        if len(current_path) > 1:
+            current_path.pop()
+        return all_paths
+
+    def calculate_paths(self) -> None:
         """
         Calculate all node paths and edge paths, between all nodes in the
         topology
@@ -46,84 +88,8 @@ class AllPaths:
                     source=self.topology.get_node_by_name(source),
                     target=self.topology.get_node_by_name(target),
                 )
-                print(
-                    f"There are {len(self.paths[source][target])} node paths between {source} and {target}"
-                )
-                print(
-                    f"All paths from {source} to {target}: {self.paths[source][target]}"
-                )
-                for node_path in self.paths[source][target]:
-                    print(f"This node path is {len(node_path)} nodes long")
-                    print(f"It has {node_path.no_edge_paths()} edge_paths")
-                    for edge_path in node_path.edge_paths:
-                        print(f"edge_path: {edge_path}")
 
         logging.info(f"Calculated {len(self)} {type(self)} paths")
-
-    def all_simple_paths(
-        self,
-        all_paths: NodePaths,
-        current_path: List[Node],
-        source: Node,
-        target: Node,
-    ) -> NodePaths:
-        """
-        Return a NodePaths list of simple paths from source to target.
-        This is a recursive depth first search, all_paths and current_path
-        are not meant to be the passed in the initial call.
-
-        :param NodePaths all_paths: Accruing list of all simple paths to target
-        :param List current_path: The current path being searched
-        :param Node source: Source node in the topology
-        :param Node target: Target node in the topology
-        :rtype: NodePaths
-        """
-
-        if current_path == []:
-            current_path.append(source)
-            print(f"Initiallised current_path with {source}")
-
-        if not current_path[-1].get_neighbours():
-            print(f"Returning empty path")
-            return NodePaths()
-
-        print(
-            f"{current_path[-1]} has neighbours {current_path[-1].get_neighbours()}"
-        )
-        for neighbour in current_path[-1].get_neighbours():
-            print(
-                f"Current path is {current_path}, current neighbour is {neighbour}"
-            )
-            if neighbour not in current_path:
-                current_path.append(neighbour)
-                print(f"Added {neighbour} to current path")
-                if neighbour == target:
-                    all_paths.add_node_path(NodePath(current_path.copy()))
-                    print(
-                        f"Added new finished path (1): {current_path.copy()}"
-                    )
-                    current_path.pop()
-                    continue
-                ret: List = self.all_simple_paths(
-                    all_paths, current_path, source, target
-                )
-                if not ret:
-                    if current_path[-1] != target:
-                        return all_paths
-                    all_paths.add_node_path(NodePath(current_path.copy()))
-                    print(
-                        f"Added new finished path (2): {current_path.copy()}"
-                    )
-                    current_path.pop()
-                else:
-                    all_paths = ret
-            else:
-                return all_paths
-
-        if len(current_path) > 0:
-            current_path.pop()
-        return all_paths
-
         """
         Stop the recursive edge adding when adding NodePath to NodePaths ################################
 

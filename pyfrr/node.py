@@ -17,7 +17,7 @@ class Edge(object):
         self.local = local
         self.remote = remote
 
-        if type(adj_sid) != int and type(adj_sid) != None:
+        if type(adj_sid) != int and adj_sid != None:
             raise ValueError(
                 f"adj_sid must be int or None, not {type(adj_sid)}"
             )
@@ -60,7 +60,9 @@ class Edge(object):
 
     def to_dict(self) -> Dict:
         """
-        Return a JSON serializable dict of the Edge
+        Return the Edge serialised as dictionary
+
+        :rtype: Dict
         """
         return {
             "source": str(self.local),
@@ -131,12 +133,6 @@ class Node(object):
         """
         if neighbour not in self.neighbours:
             self.neighbours.append(neighbour)
-
-    # def all_edges(self) -> Dict:
-    #    """
-    #    Return all the edges of this node
-    #    """
-    #    return self.edges
 
     def edges_to_list(self) -> List:
         """
