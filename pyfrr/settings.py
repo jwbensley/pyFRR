@@ -9,7 +9,7 @@ class Settings:
     #
 
     BASE_DIR: str = os.path.dirname(os.path.realpath(__file__))
-    DEBUG = True
+    DEBUG = False
 
     #
     # LOGGING

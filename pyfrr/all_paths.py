@@ -30,7 +30,7 @@ class AllPaths:
     def all_simple_paths(
         self,
         all_paths: NodePaths,
-        current_path: List[Node],  ######## Should be a NodePath - FIXME
+        current_path: NodePath,
         source: Node,
         target: Node,
     ) -> NodePaths:
@@ -40,26 +40,24 @@ class AllPaths:
         are not meant to be the passed in the initial call.
 
         :param NodePaths all_paths: Accruing list of all simple paths to target
-        :param List current_path: The current path being searched
+        :param NodePath current_path: The current path being searched
         :param Node source: Source node in the topology
         :param Node target: Target node in the topology
         :rtype: NodePaths
         """
 
-        if current_path == []:
-            current_path.append(source)
+        if not current_path:
+            current_path.set_source(source)
 
         for neighbour in [
             n
             for n in current_path[-1].get_neighbours()
             if n not in current_path
         ]:
-            current_path.append(neighbour)
+            current_path.add_node(neighbour)
 
             if neighbour == target:
-                all_paths.add_node_path(
-                    NodePath(node_path=current_path.copy())
-                )
+                all_paths.add_node_path(current_path.copy())
                 current_path.pop()
                 continue
 
@@ -84,7 +82,7 @@ class AllPaths:
                     continue
                 self.paths[source][target] = self.all_simple_paths(
                     all_paths=NodePaths(node_paths=[]),
-                    current_path=[],
+                    current_path=NodePath(expand_edges=False, node_path=[]),
                     source=self.topology.get_node_by_name(source),
                     target=self.topology.get_node_by_name(target),
                 )
