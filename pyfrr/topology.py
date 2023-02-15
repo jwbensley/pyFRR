@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import logging
 from io import TextIOWrapper
@@ -11,6 +13,7 @@ class Topology:
 
     def __init__(self) -> None:
         self.nodes = {}
+        self.topology_file = ""
 
     def __str__(self) -> str:
         data: Dict = {}
@@ -28,63 +31,62 @@ class Topology:
         if node.get_name() not in self.nodes:
             self.nodes[node.get_name()] = node
 
-    def edge_from_nx_edge(self, nx_edge: Dict) -> Edge:
+    @staticmethod
+    def edge_from_nx_edge(nodes: Dict[Node], nx_edge: Dict) -> Edge:
         """
         Return an Edge obj from an NX formatted dict
 
-        :param Dict nx_edge: An NX syntax link object
+        :param Dict node_list: Dict of nodes the edge connects
+        :param Dict nx_edge: A NetworkX syntax link object
         :rtype: Edge
         """
         return Edge(
-            local=self.nodes[nx_edge["source"]],
-            remote=self.nodes[nx_edge["target"]],
+            local=nodes[nx_edge["source"]],
+            remote=nodes[nx_edge["target"]],
             adj_sid=nx_edge["adj_sid"] if "adj_sid" in nx_edge else None,
             weight=nx_edge["weight"] if "weight" in nx_edge else None,
         )
 
-    def from_nx_dict(self, topology: Dict) -> None:
+    @staticmethod
+    def from_nx_dict(topology: Dict) -> Topology:
         """
-        Create the topology from a NX syntax dictionary
+        Return a topology from a NetworkX syntax dictionary
 
         :param dict topology: NetworkX formatted dict of nodes and links
-        :rtype: None
+        :rtype: Topology
         """
 
-        """
-        Erase the existing topology
-        """
-        self.topology_file = ""
-        self.nodes = {}
+        t = Topology()
 
         """
         Load all the node objects
         """
         nx_node: Dict
         for nx_node in topology["nodes"]:
-            self.nodes[nx_node["id"]] = self.node_from_nx_node(nx_node)
+            t.nodes[nx_node["id"]] = t.node_from_nx_node(nx_node)
 
         """
         Load all the edge objects
         """
         nx_edge: Dict
         for nx_edge in topology["links"]:
-            edge = self.edge_from_nx_edge(nx_edge)
-            if edge.local.get_name() not in self.nodes:
+            edge = t.edge_from_nx_edge(t.nodes, nx_edge)
+            if edge.local.get_name() not in t.nodes:
                 logging.error(
                     f"Can't add link from {edge.local} to {edge.remote}, "
                     f"{edge.local} is not in topology"
                 )
-            elif edge.remote.get_name() not in self.nodes:
+            elif edge.remote.get_name() not in t.nodes:
                 logging.error(
                     f"Can't add link from {edge.local} to {edge.remote}, "
                     f"{edge.remote} is not in topology"
                 )
-            self.nodes[edge.local.get_name()].add_edge(edge)
+            t.nodes[edge.local.get_name()].add_edge(edge)
 
         """
         Add any missing edges which were only created in one direction
         """
-        for node in self.get_nodes():
+        for node in t.get_nodes():
             for neighbour in node.get_neighbours():
                 if not node.edges_toward_node(neighbour):
                     for edge in neighbour.edges_toward_node(node):
@@ -93,16 +95,18 @@ class Topology:
                         node.add_edge(new_edge)
 
         logging.debug(
-            f"Created topology with {self.no_of_nodes()} nodes and "
-            f"{self.no_of_edges()} edges"
+            f"Created topology with {t.no_of_nodes()} nodes and "
+            f"{t.no_of_edges()} edges"
         )
+        return t
 
-    def from_nx_json(self, json_data: str) -> None:
+    @staticmethod
+    def from_nx_json(json_data: str) -> Topology:
         """
-        Build the topology data from a JSON string
+        Return a topology obj from a JSON string
 
         :param str json: JSON string to parse
-        :rtype: None
+        :rtype: Topology
         """
         topo_data: Dict
         try:
@@ -113,14 +117,15 @@ class Topology:
             )
             raise e
 
-        self.from_nx_dict(topo_data)
+        return Topology.from_nx_dict(topo_data)
 
-    def from_nx_json_file(self, filename: str) -> None:
+    @staticmethod
+    def from_nx_json_file(filename: str) -> Topology:
         """
-        Build the topology data from the contents of JSON file.
+        Return a topology obj from the contents of JSON file.
 
         :param str filename: JSON filename to load
-        :rtype: None
+        :rtype: Topology
         """
         json_file: TextIOWrapper
         json_data: str
@@ -133,8 +138,9 @@ class Topology:
             raise e
 
         json_file.close()
-        self.from_nx_json(json_data)
-        self.topology_file = filename
+        t: Topology = Topology.from_nx_json(json_data)
+        t.topology_file = filename
+        return t
 
     def get_node_by_name(self, name: str) -> Node:
         """
@@ -182,7 +188,8 @@ class Topology:
         """
         return len(self.nodes)
 
-    def node_from_nx_node(self, nx_node: Dict) -> Node:
+    @staticmethod
+    def node_from_nx_node(nx_node: Dict) -> Node:
         """
         Return a new Node obj from a dict using networkx syntax
 
@@ -205,10 +212,12 @@ class Topology:
         """
         return [self.nodes[node] for node in node_path]
 
-    def to_dict(self) -> Dict:
+    @staticmethod
+    def to_dict(t: Topology) -> Dict:
         """
-        Return a JSON serializable dict for the topo data, inc NetworkX attrs
+        Return a JSON serialised dict of a topology, in NetworkX format
 
+        :param Topology t: Topology to serialised to dict
         :rtype: dict
         """
         topo_data: Dict = {
@@ -218,9 +227,9 @@ class Topology:
             "links": [],
         }
 
-        for node_name in self.nodes:
-            topo_data["nodes"].append(self.nodes[node_name].node_to_dict())
-            topo_data["links"].append(self.nodes[node_name].edges_to_list())
+        for node in t.get_nodes():
+            topo_data["nodes"].append(node.node_to_dict())
+            topo_data["links"] += node.edges_to_list()
 
         logging.debug(
             f"Created dict with {len(topo_data['nodes'])} nodes and "
@@ -228,3 +237,33 @@ class Topology:
         )
 
         return topo_data
+
+    @staticmethod
+    def to_nx_json(t: Topology) -> str:
+        """
+        Return a JSON string serialisation of a topology in NetworkX format
+
+        :param Topology t: NetworkX object to serialise to JSON string
+        :rtype: Topology
+        """
+        return json.dumps(Topology.to_dict(t), indent=4)
+
+    def to_nx_json_file(self, filename: str, t: Topology) -> None:
+        """
+        Serialise a Topology to a file as a JSON string
+
+        :param str Filename: Output filename path to write the JSON
+        :param Topology t: Topology object to serialise
+        :rtype: None
+        """
+        json_data: str = Topology.to_nx_json(t)
+
+        json_file: TextIOWrapper
+        try:
+            json_file = open(filename, "w")
+            json_file.write(json_data)
+        except Exception as e:
+            logging.error(f"Couldn't write topology file {filename}")
+            raise e
+
+        json_file.close()

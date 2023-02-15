@@ -26,10 +26,9 @@ def parse_cli_args() -> Dict:
         help="Topology file to parse",
         type=str,
         required=False,
-        default="pyfrr/tests/ecmp1.json",
-        # default="pyfrr/tests/test_topology.json",
-        # default="old/example/ring.json",
-        # default="old/example/mesh_topo.json",
+        default="examples/ecmp.json",
+        # default="examples/ring.json",
+        # default="examples/mesh.json",
     )
 
     return vars(parser.parse_args())
@@ -38,8 +37,7 @@ def parse_cli_args() -> Dict:
 def main():
     args: Dict = parse_cli_args()
 
-    p: PyFrr = PyFrr()
-    p.load_nx_json(args["topology"])
+    p: PyFrr = PyFrr(args["topology"])
 
     sys.exit(0)
 

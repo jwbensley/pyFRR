@@ -1,4 +1,6 @@
 {
+    "directed": false,
+    "multigraph": false,
     "nodes": [
         {
             "id": "PE1",
@@ -49,8 +51,20 @@
             "adj_sid": 4011
         },
         {
+            "source": "P1",
+            "target": "PE1",
+            "weight": 10,
+            "adj_sid": 4011
+        },
+        {
             "source": "PE1",
             "target": "P1",
+            "weight": 10,
+            "adj_sid": 4111
+        },
+        {
+            "source": "P1",
+            "target": "PE1",
             "weight": 10,
             "adj_sid": 4111
         },
@@ -61,8 +75,20 @@
             "adj_sid": 4211
         },
         {
+            "source": "P1",
+            "target": "PE1",
+            "weight": 20,
+            "adj_sid": 4211
+        },
+        {
             "source": "PE1",
             "target": "PE2",
+            "weight": 50,
+            "adj_sid": 4012
+        },
+        {
+            "source": "PE2",
+            "target": "PE1",
             "weight": 50,
             "adj_sid": 4012
         },
@@ -73,8 +99,20 @@
             "adj_sid": 4015
         },
         {
+            "source": "PE5",
+            "target": "PE1",
+            "weight": 50,
+            "adj_sid": 4015
+        },
+        {
             "source": "PE2",
             "target": "P2",
+            "weight": 10,
+            "adj_sid": 4022
+        },
+        {
+            "source": "P2",
+            "target": "PE2",
             "weight": 10,
             "adj_sid": 4022
         },
@@ -85,8 +123,20 @@
             "adj_sid": 4054
         },
         {
+            "source": "P4",
+            "target": "PE5",
+            "weight": 10,
+            "adj_sid": 4054
+        },
+        {
             "source": "P1",
             "target": "P2",
+            "weight": 10,
+            "adj_sid": 3012
+        },
+        {
+            "source": "P2",
+            "target": "P1",
             "weight": 10,
             "adj_sid": 3012
         },
@@ -97,8 +147,20 @@
             "adj_sid": 3013
         },
         {
+            "source": "P3",
+            "target": "P1",
+            "weight": 40,
+            "adj_sid": 3013
+        },
+        {
             "source": "P1",
             "target": "P4",
+            "weight": 20,
+            "adj_sid": 3014
+        },
+        {
+            "source": "P4",
+            "target": "P1",
             "weight": 20,
             "adj_sid": 3014
         },
@@ -110,7 +172,19 @@
         },
         {
             "source": "P4",
+            "target": "P2",
+            "weight": 40,
+            "adj_sid": 3024
+        },
+        {
+            "source": "P4",
             "target": "P3",
+            "weight": 50,
+            "adj_sid": 3043
+        },
+        {
+            "source": "P3",
+            "target": "P4",
             "weight": 50,
             "adj_sid": 3043
         },
@@ -121,8 +195,20 @@
             "adj_sid": 4044
         },
         {
+            "source": "PE4",
+            "target": "P4",
+            "weight": 10,
+            "adj_sid": 4044
+        },
+        {
             "source": "P3",
             "target": "PE3",
+            "weight": 10,
+            "adj_sid": 4033
+        },
+        {
+            "source": "PE3",
+            "target": "P3",
             "weight": 10,
             "adj_sid": 4033
         }

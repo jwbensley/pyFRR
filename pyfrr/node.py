@@ -64,12 +64,15 @@ class Edge(object):
 
         :rtype: Dict
         """
-        return {
+        d: Dict = {
             "source": str(self.local),
             "target": str(self.remote),
-            "adj_sid": self.adj_sid,
-            "weight": self.weight,
         }
+        if self.adj_sid:
+            d["adj_sid"] = self.adj_sid
+        if self.weight:
+            d["weight"] = self.weight
+        return d
 
 
 class Node(object):
@@ -193,7 +196,10 @@ class Node(object):
 
         :rtype: Dict
         """
-        return {"id": self.name}
+        d: Dict = {"id": self.name}
+        if self.node_sid:
+            d["node_sid"] = self.node_sid
+        return d
 
     def to_dict(self) -> Dict:
         """

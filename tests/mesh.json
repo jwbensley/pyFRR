@@ -1,0 +1,216 @@
+{
+    "directed": false,
+    "multigraph": false,
+    "nodes": [
+        {
+            "id": "PE1",
+            "node_sid": 2001
+        },
+        {
+            "id": "PE2",
+            "node_sid": 2002
+        },
+        {
+            "id": "PE3",
+            "node_sid": 2003
+        },
+        {
+            "id": "PE4",
+            "node_sid": 2004
+        },
+        {
+            "id": "PE5",
+            "node_sid": 2005
+        },
+        {
+            "id": "P1",
+            "node_sid": 1001
+        },
+        {
+            "id": "P2",
+            "node_sid": 1002
+        },
+        {
+            "id": "P3",
+            "node_sid": 1003
+        },
+        {
+            "id": "P4",
+            "node_sid": 1004
+        },
+        {
+            "id": "P5",
+            "node_sid": 1005
+        }
+    ],
+    "links": [
+        {
+            "source": "PE1",
+            "target": "P1",
+            "adj_sid": 4011,
+            "weight": 10
+        },
+        {
+            "source": "PE1",
+            "target": "P1",
+            "adj_sid": 4111,
+            "weight": 10
+        },
+        {
+            "source": "PE1",
+            "target": "P1",
+            "adj_sid": 4211,
+            "weight": 20
+        },
+        {
+            "source": "PE1",
+            "target": "PE2",
+            "adj_sid": 4012,
+            "weight": 50
+        },
+        {
+            "source": "PE1",
+            "target": "PE5",
+            "adj_sid": 4015,
+            "weight": 50
+        },
+        {
+            "source": "PE2",
+            "target": "PE1",
+            "adj_sid": 4012,
+            "weight": 50
+        },
+        {
+            "source": "PE2",
+            "target": "P2",
+            "adj_sid": 4022,
+            "weight": 10
+        },
+        {
+            "source": "PE3",
+            "target": "P3",
+            "adj_sid": 4033,
+            "weight": 10
+        },
+        {
+            "source": "PE4",
+            "target": "P4",
+            "adj_sid": 4044,
+            "weight": 10
+        },
+        {
+            "source": "PE5",
+            "target": "PE1",
+            "adj_sid": 4015,
+            "weight": 50
+        },
+        {
+            "source": "PE5",
+            "target": "P4",
+            "adj_sid": 4054,
+            "weight": 10
+        },
+        {
+            "source": "P1",
+            "target": "PE1",
+            "adj_sid": 4011,
+            "weight": 10
+        },
+        {
+            "source": "P1",
+            "target": "PE1",
+            "adj_sid": 4111,
+            "weight": 10
+        },
+        {
+            "source": "P1",
+            "target": "PE1",
+            "adj_sid": 4211,
+            "weight": 20
+        },
+        {
+            "source": "P1",
+            "target": "P2",
+            "adj_sid": 3012,
+            "weight": 10
+        },
+        {
+            "source": "P1",
+            "target": "P3",
+            "adj_sid": 3013,
+            "weight": 40
+        },
+        {
+            "source": "P1",
+            "target": "P4",
+            "adj_sid": 3014,
+            "weight": 20
+        },
+        {
+            "source": "P2",
+            "target": "PE2",
+            "adj_sid": 4022,
+            "weight": 10
+        },
+        {
+            "source": "P2",
+            "target": "P1",
+            "adj_sid": 3012,
+            "weight": 10
+        },
+        {
+            "source": "P2",
+            "target": "P4",
+            "adj_sid": 3024,
+            "weight": 40
+        },
+        {
+            "source": "P3",
+            "target": "P1",
+            "adj_sid": 3013,
+            "weight": 40
+        },
+        {
+            "source": "P3",
+            "target": "P4",
+            "adj_sid": 3043,
+            "weight": 50
+        },
+        {
+            "source": "P3",
+            "target": "PE3",
+            "adj_sid": 4033,
+            "weight": 10
+        },
+        {
+            "source": "P4",
+            "target": "PE5",
+            "adj_sid": 4054,
+            "weight": 10
+        },
+        {
+            "source": "P4",
+            "target": "P1",
+            "adj_sid": 3014,
+            "weight": 20
+        },
+        {
+            "source": "P4",
+            "target": "P2",
+            "adj_sid": 3024,
+            "weight": 40
+        },
+        {
+            "source": "P4",
+            "target": "P3",
+            "adj_sid": 3043,
+            "weight": 50
+        },
+        {
+            "source": "P4",
+            "target": "PE4",
+            "adj_sid": 4044,
+            "weight": 10
+        }
+    ]
+}

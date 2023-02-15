@@ -341,14 +341,14 @@ class NodePaths(object):
         """
         if self.node_paths:
             if (
-                node_path.source() != self.node_paths[0].source()
-                or node_path.target() != self.node_paths[0].target()
+                node_path.get_source() != self.node_paths[0].get_source()
+                or node_path.get_target() != self.node_paths[0].get_target()
             ):
                 raise ValueError(
-                    f"Source and target nodes of new path ({node_path.source()}"
-                    f" -> {node_path.target()}) don't match existing paths ("
-                    f"{self.node_paths[0].source()} -> "
-                    f"{self.node_paths[-1].target()})"
+                    f"Source and target nodes of new path ({node_path.get_source()}"
+                    f" -> {node_path.get_target()}) don't match existing paths ("
+                    f"{self.node_paths[0].get_source()} -> "
+                    f"{self.node_paths[-1].get_target()})"
                 )
 
         if node_path not in self.node_paths:
