@@ -1,20 +1,21 @@
+from __future__ import annotations
+
 from typing import List
 
-import networkx
-
 from .all_paths import AllPaths
-from .path import Path
+from .path import NodePaths
 from .settings import Settings
 
 
 class Spf(AllPaths):
-    def get_paths(self, source: str, target: str) -> List[Path]:
+    def get_paths(self: Spf, source: str, target: str) -> List[NodePaths]:
         """
         Return all the shortest cost path(s) between source and target
 
         :param str source: Source node name in graph
         :param str target: Destination node name in graph
         :rtype: List
+        """
         """
         nx_paths: List = []
         try:
@@ -44,8 +45,10 @@ class Spf(AllPaths):
                 )
             )
         return paths
+        """
+        return []
 
-    def get_path_weight(self, path: List[Path]) -> int:
+    def get_path_weight(self: Spf, path: List[NodePaths]) -> int:
         """
         Return the weight of an explicit path from source to target
 
@@ -53,14 +56,16 @@ class Spf(AllPaths):
         :param str target: Destination node name in graph
         :rtype: int
         """
+        return 0
 
-    def get_weight(self, source: str, target: str) -> int:
+    def get_weight(self: Spf, source: str, target: str) -> int:
         """
         Return the weight of the shortest path from source to target
 
         :param str source: Source node name in graph
         :param str target: Destination node name in graph
         :rtype: int
+        """
         """
         try:
             return networkx.shortest_path_length(
@@ -71,3 +76,5 @@ class Spf(AllPaths):
             )
         except networkx.exception.NetworkXNoPath:
             return 0
+        """
+        return 0

@@ -3,7 +3,8 @@ from __future__ import annotations
 import json
 import logging
 from io import TextIOWrapper
-from typing import Dict, List
+from typing import Any, Dict, List
+
 from .node import Edge, Node
 
 
@@ -11,17 +12,17 @@ class Topology:
     nodes: Dict[str, Node]
     topology_file: str
 
-    def __init__(self) -> None:
+    def __init__(self: Topology) -> None:
         self.nodes = {}
         self.topology_file = ""
 
-    def __str__(self) -> str:
+    def __str__(self: Topology) -> str:
         data: Dict = {}
-        for node in self.nodes:
-            data[node.get_name()] = self.nodes[node].to_dict()
+        for name in self.get_node_names():
+            data[name] = self.nodes[name].to_dict()
         return json.dumps(data, indent=2)
 
-    def add_node(self, node: Node) -> None:
+    def add_node(self: Topology, node: Node) -> None:
         """
         Add a node to the topology
 
@@ -32,7 +33,7 @@ class Topology:
             self.nodes[node.get_name()] = node
 
     @staticmethod
-    def edge_from_nx_edge(nodes: Dict[Node], nx_edge: Dict) -> Edge:
+    def edge_from_nx_edge(nodes: Dict[str, Node], nx_edge: Dict) -> Edge:
         """
         Return an Edge obj from an NX formatted dict
 
@@ -48,7 +49,7 @@ class Topology:
         )
 
     @staticmethod
-    def from_nx_dict(topology: Dict) -> Topology:
+    def from_nx_dict(topology: Dict[str, Any]) -> Topology:
         """
         Return a topology from a NetworkX syntax dictionary
 
@@ -142,7 +143,7 @@ class Topology:
         t.topology_file = filename
         return t
 
-    def get_node_by_name(self, name: str) -> Node:
+    def get_node_by_name(self: Topology, name: str) -> Node:
         """
         Return the node object by name
 
@@ -153,23 +154,23 @@ class Topology:
             return self.nodes[name]
         raise ValueError(f"Node {name} not found")
 
-    def get_node_names(self) -> List[str]:
+    def get_node_names(self: Topology) -> List[str]:
         """
         Return the list of node names in the topology
 
         :rtype: List
         """
-        return self.nodes.keys()
+        return list(self.nodes.keys())
 
-    def get_nodes(self) -> List[Node]:
+    def get_nodes(self: Topology) -> List[Node]:
         """
         Return a list of all nodes in the topology
 
         :rtype: List
         """
-        return self.nodes.values()
+        return list(self.nodes.values())
 
-    def no_of_edges(self) -> int:
+    def no_of_edges(self: Topology) -> int:
         """
         Return the number of edges in the topology
 
@@ -180,7 +181,7 @@ class Topology:
             count += self.nodes[node_name].no_of_edges()
         return count
 
-    def no_of_nodes(self) -> int:
+    def no_of_nodes(self: Topology) -> int:
         """
         Return the number of nodes in the topology
 
@@ -189,7 +190,7 @@ class Topology:
         return len(self.nodes)
 
     @staticmethod
-    def node_from_nx_node(nx_node: Dict) -> Node:
+    def node_from_nx_node(nx_node: Dict[str, Any]) -> Node:
         """
         Return a new Node obj from a dict using networkx syntax
 
@@ -203,7 +204,7 @@ class Topology:
             node_sid=nx_node["node_sid"] if "node_sid" in nx_node else None,
         )
 
-    def node_list_from_str(self, node_path: List[str]) -> List[Node]:
+    def node_list_from_str(self: Topology, node_path: List[str]) -> List[Node]:
         """
         Return a list of node obj's given a list of node names
 
@@ -213,7 +214,7 @@ class Topology:
         return [self.nodes[node] for node in node_path]
 
     @staticmethod
-    def to_dict(t: Topology) -> Dict:
+    def to_dict(t: Topology) -> Dict[str, Any]:
         """
         Return a JSON serialised dict of a topology, in NetworkX format
 
@@ -248,7 +249,7 @@ class Topology:
         """
         return json.dumps(Topology.to_dict(t), indent=4)
 
-    def to_nx_json_file(self, filename: str, t: Topology) -> None:
+    def to_nx_json_file(self: Topology, filename: str, t: Topology) -> None:
         """
         Serialise a Topology to a file as a JSON string
 

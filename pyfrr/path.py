@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Iterator, List
 import logging
+from typing import Iterator, List
+
 from .node import Edge, Node
 
 
@@ -10,30 +11,30 @@ class EdgePath(object):
     A list of edges along a NodePath
     """
 
-    def __init__(self, edge_path: List[Edge] = []) -> None:
+    def __init__(self: EdgePath, edge_path: List[Edge] = []) -> None:
         self.edge_path: List[Edge] = edge_path
         logging.debug(
             f"Init'd EdgePath {hex(id(self))} with {len(self)} edges: {self}"
         )
 
-    def __contains__(self, edge: Edge) -> bool:
+    def __contains__(self: EdgePath, edge: Edge) -> bool:
         return edge in self.edge_path
 
-    def __getitem__(self, index):
+    def __getitem__(self: EdgePath, index: slice | int) -> List[Edge] | Edge:
         if isinstance(index, slice):
             return self.edge_path[index.start : index.stop : index.step]
         return self.edge_path[index]
 
-    def __len__(self) -> int:
+    def __len__(self: EdgePath) -> int:
         return len(self.edge_path)
 
-    def __nonzero__(self) -> bool:
+    def __nonzero__(self: EdgePath) -> bool:
         return bool(self.edge_path)
 
-    def __repr__(self):
+    def __repr__(self: EdgePath) -> str:
         return str([str(edge) for edge in self.edge_path])
 
-    def append(self, edge: Edge) -> None:
+    def append(self: EdgePath, edge: Edge) -> None:
         """
         Add a new edge to this edge path
 
@@ -43,7 +44,7 @@ class EdgePath(object):
         if edge not in self.edge_path:
             self.edge_path.append(edge)
 
-    def copy(self) -> EdgePath:
+    def copy(self: EdgePath) -> EdgePath:
         """
         Return a copy of this obj
 
@@ -51,7 +52,7 @@ class EdgePath(object):
         """
         return EdgePath(self.edge_path.copy())
 
-    def pop(self, i: int = -1) -> Edge:
+    def pop(self: EdgePath, i: int = -1) -> Edge:
         """
         Remove the edge at index i from this edge path and return it
 
@@ -60,7 +61,7 @@ class EdgePath(object):
         """
         return self.edge_path.pop(i)
 
-    def source(self) -> Node:
+    def source(self: EdgePath) -> Node:
         """
         The first node in the edge path
 
@@ -68,7 +69,7 @@ class EdgePath(object):
         """
         return self.edge_path[0].local
 
-    def target(self) -> Node:
+    def target(self: EdgePath) -> Node:
         """
         The last node in the edge path
 
@@ -76,7 +77,7 @@ class EdgePath(object):
         """
         return self.edge_path[-1].remote
 
-    def weight(self) -> int:
+    def weight(self: EdgePath) -> int:
         """
         Return the total weight of this EdgePath
 
@@ -94,7 +95,7 @@ class EdgePaths(object):
     A list of EdgePath's in weight order
     """
 
-    def __init__(self, edge_paths: List[EdgePath] = []) -> None:
+    def __init__(self: EdgePaths, edge_paths: List[EdgePath] = []) -> None:
         self.edge_paths: List[EdgePath] = []
 
         for edge_path in edge_paths:
@@ -104,16 +105,19 @@ class EdgePaths(object):
             f"{self}"
         )
 
-    def __getitem__(self, index):
+    def __getitem__(self: EdgePaths, index: int) -> EdgePath:
         return self.edge_paths[index]
 
-    def __len__(self) -> int:
+    def __len__(self: EdgePaths) -> int:
         return len(self.edge_paths)
 
-    def __repr__(self) -> str:
+    def __nonzero__(self: EdgePaths) -> bool:
+        return bool(self.edge_paths)
+
+    def __repr__(self: EdgePaths) -> str:
         return str([str(edge_path) for edge_path in self.edge_paths])
 
-    def add_edge_path(self, edge_path) -> None:
+    def add_edge_path(self: EdgePaths, edge_path: EdgePath) -> None:
         """
         Add the new edge path in descending weight order
 
@@ -130,7 +134,7 @@ class EdgePaths(object):
     def expand_node_path(
         all_edge_paths: EdgePaths,
         edge_path: EdgePath,
-        node_path: NodePath,
+        node_path: NodePath | Node,
     ) -> EdgePaths | None:
         """
         Recursively (DFS) expand a node path to a list of edge paths along the
@@ -141,6 +145,7 @@ class EdgePaths(object):
         :param NodePath node_path: The list of nodes to expand into edges
         :rtype: EdgePaths
         """
+        assert type(node_path) == NodePath
         if len(node_path) < 2:
             return None
 
@@ -168,11 +173,12 @@ class EdgePaths(object):
         """
         if len(node_path) > 1:
             logging.debug(f"Going to expand node path {node_path}")
-            return EdgePaths.expand_node_path(
+            if edge_path := EdgePaths.expand_node_path(
                 all_edge_paths=EdgePaths(edge_paths=[]),
                 edge_path=EdgePath(edge_path=[]),
                 node_path=node_path,
-            )
+            ):
+                return edge_path
         return EdgePaths()
 
 
@@ -183,7 +189,7 @@ class NodePath(object):
     """
 
     def __init__(
-        self, expand_edges: bool = True, node_path: List[Node] = []
+        self: NodePath, expand_edges: bool = True, node_path: List[Node] = []
     ) -> None:
         self.node_path: List[Node] = node_path
         self.edge_paths: EdgePaths
@@ -193,33 +199,31 @@ class NodePath(object):
         if expand_edges:
             self.update_edge_paths()
 
-    def __getitem__(self, index: slice | int) -> NodePath | Node:
+    def __getitem__(self: NodePath, index: slice | int) -> NodePath | Node:
         """
         Currently if you slice a NodePath, all the edges need to be recalculated
-        instead of being copied, from that node onwards.
+        instead of being copied from the selected node onwards.
         FIXME / TODO
         """
         if isinstance(index, slice):
             return NodePath(
-                node_path=self.node_path[
-                    index.start : index.stop : index.step
-                ],
+                node_path=self.node_path[index.start : index.stop : index.step],
             )
         return self.node_path[index]
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self: NodePath) -> Iterator:
         return self.node_path.__iter__()
 
-    def __len__(self) -> int:
+    def __len__(self: NodePath) -> int:
         return len(self.node_path)
 
-    def __nonzero__(self) -> bool:
+    def __nonzero__(self: NodePath) -> bool:
         return bool(self.node_path)
 
-    def __repr__(self):
+    def __repr__(self: NodePath) -> str:
         return str([str(node) for node in self.node_path])
 
-    def add_node(self, node: Node) -> None:
+    def add_node(self: NodePath, node: Node) -> None:
         """
         Add a new node to the end of the node path
 
@@ -229,7 +233,7 @@ class NodePath(object):
         if node not in self.node_path:
             self.node_path.append(node)
 
-    def copy(self) -> NodePath:
+    def copy(self: NodePath) -> NodePath:
         """
         Return a copy of this obj
 
@@ -237,7 +241,7 @@ class NodePath(object):
         """
         return NodePath(node_path=self.node_path.copy())
 
-    def pop(self, i: int = -1) -> Node:
+    def pop(self: NodePath, i: int = -1) -> Node:
         """
         Remove the node at index i from this node path and return it
 
@@ -246,7 +250,7 @@ class NodePath(object):
         """
         return self.node_path.pop(i)
 
-    def edges(self, i: int) -> List[Edge]:
+    def edges(self: NodePath, i: int) -> List[Edge]:
         """
         Return the list of edges at the given index in the node path
 
@@ -254,7 +258,7 @@ class NodePath(object):
         """
         return self.node_path[i].edges_toward_node(self.node_path[i + 1])
 
-    def get_source(self) -> Node:
+    def get_source(self: NodePath) -> Node:
         """
         Get the first node in this node path
 
@@ -262,7 +266,7 @@ class NodePath(object):
         """
         return self.node_path[0]
 
-    def get_target(self) -> Node:
+    def get_target(self: NodePath) -> Node:
         """
         Get the last node in this node path
 
@@ -270,7 +274,7 @@ class NodePath(object):
         """
         return self.node_path[-1]
 
-    def no_edge_paths(self) -> int:
+    def no_edge_paths(self: NodePath) -> int:
         """
         The number of edge paths between the source and target node
 
@@ -278,7 +282,7 @@ class NodePath(object):
         """
         return len(self.edge_paths)
 
-    def set_source(self, source: Node) -> None:
+    def set_source(self: NodePath, source: Node) -> None:
         """
         Set the first node in this NodePath.
         This will the existing path if one exists.
@@ -290,7 +294,7 @@ class NodePath(object):
             self.node_path = []
         self.node_path.append(source)
 
-    def update_edge_paths(self) -> None:
+    def update_edge_paths(self: NodePath) -> None:
         """
         Update the edge paths for this node path
 
@@ -304,7 +308,7 @@ class NodePaths(object):
     A list of NodePath's between the same source and target
     """
 
-    def __init__(self, node_paths: List[NodePath] = []) -> None:
+    def __init__(self: NodePaths, node_paths: List[NodePath] = []) -> None:
         self.node_paths: List[NodePath] = []
         for node_path in node_paths:
             self.add_node_path(node_path)
@@ -313,26 +317,28 @@ class NodePaths(object):
             f"Init'd NodePaths {hex(id(self))} with {len(self)} node paths"
         )
 
-    def __getitem__(self, index: slice | int) -> NodePaths | NodePath:
+    def __getitem__(
+        self: NodePaths, index: slice | int
+    ) -> NodePaths | NodePath:
         if isinstance(index, slice):
             return NodePaths(
                 self.node_paths[index.start : index.stop : index.step]
             )
         return self.node_paths[index]
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self: NodePaths) -> Iterator:
         return self.node_paths.__iter__()
 
-    def __len__(self) -> int:
+    def __len__(self: NodePaths) -> int:
         return len(self.node_paths)
 
-    def __nonzero__(self) -> bool:
+    def __nonzero__(self: NodePaths) -> bool:
         return bool(self.node_paths)
 
-    def __repr__(self):
+    def __repr__(self: NodePaths) -> str:
         return str([str(node_path) for node_path in self.node_paths])
 
-    def add_node_path(self, node_path: NodePath) -> None:
+    def add_node_path(self: NodePaths, node_path: NodePath) -> None:
         """
         Add a new NodePath obj to the list of NodePaths'
 

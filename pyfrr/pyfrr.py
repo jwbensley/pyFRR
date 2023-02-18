@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .all_paths import AllPaths
 from .log import Logger
 
@@ -10,7 +12,7 @@ class PyFrr:
     all_paths: AllPaths
     # spf: Spf
 
-    def __init__(self, filename: str = "") -> None:
+    def __init__(self: PyFrr, filename: str = "") -> None:
         Logger.setup()
         if filename:
             self.topology = Topology.from_nx_json_file(filename)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import Dict, List
 
@@ -10,11 +12,11 @@ class AllPaths:
     topology: Topology
     paths: Dict[Node, Dict[Node, NodePaths]]
 
-    def __init__(self, topology: Topology) -> None:
+    def __init__(self: AllPaths, topology: Topology) -> None:
         self.topology = topology
         self.calculate_paths()
 
-    def __len__(self) -> int:
+    def __len__(self: AllPaths) -> int:
         """
         Return the total number of simple paths that have been calculated in
         the topology.
@@ -28,7 +30,7 @@ class AllPaths:
         return count
 
     def all_simple_paths(
-        self,
+        self: AllPaths,
         all_paths: NodePaths,
         current_path: NodePath,
         source: Node,
@@ -49,6 +51,7 @@ class AllPaths:
         if not current_path:
             current_path.set_source(source)
 
+        assert type(current_path[-1]) == Node
         for neighbour in [
             n
             for n in current_path[-1].get_neighbours()
@@ -67,7 +70,7 @@ class AllPaths:
             current_path.pop()
         return all_paths
 
-    def calculate_paths(self) -> None:
+    def calculate_paths(self: AllPaths) -> None:
         """
         Calculate all node paths and edge paths, between all nodes in the
         topology
@@ -75,21 +78,16 @@ class AllPaths:
         :rtype: None
         """
         self.paths = {}
-        for source in self.topology.get_node_names():
+        for source in self.topology.get_nodes():
             self.paths[source] = {}
-            for target in self.topology.get_node_names():
+            for target in self.topology.get_nodes():
                 if source == target:
                     continue
                 self.paths[source][target] = self.all_simple_paths(
                     all_paths=NodePaths(node_paths=[]),
                     current_path=NodePath(expand_edges=False, node_path=[]),
-                    source=self.topology.get_node_by_name(source),
-                    target=self.topology.get_node_by_name(target),
+                    source=source,
+                    target=target,
                 )
 
         logging.info(f"Calculated {len(self)} {type(self)} paths")
-        """
-        Stop the recursive edge adding when adding NodePath to NodePaths ################################
-
-        HOW TO ADD IN SRLGs? #############################################################################
-        """

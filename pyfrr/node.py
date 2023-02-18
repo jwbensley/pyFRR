@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Any, Dict, List
 
 
 class Edge(object):
@@ -27,7 +27,7 @@ class Edge(object):
             raise ValueError(f"weight must be int or None, not {type(weight)}")
         self.weight = weight
 
-    def __repr__(self) -> str:
+    def __repr__(self: Edge) -> str:
         attrs: Dict = {}
         if self.adj_sid:
             attrs["adj_sid"] = self.adj_sid
@@ -35,7 +35,7 @@ class Edge(object):
             attrs["weight"] = self.weight
         return f"{self.local} -> {self.remote}: {attrs}"
 
-    def copy(self) -> Edge:
+    def copy(self: Edge) -> Edge:
         """
         Return a copy of this Edge
 
@@ -48,7 +48,7 @@ class Edge(object):
             weight=self.weight,
         )
 
-    def swap_nodes(self) -> None:
+    def swap_nodes(self: Edge) -> None:
         """
         Reverse the source and targets of this edge
 
@@ -58,7 +58,7 @@ class Edge(object):
         self.local = self.remote
         self.remote = temp
 
-    def to_dict(self) -> Dict:
+    def to_dict(self: Edge) -> Dict[str, Any]:
         """
         Return the Edge serialised as dictionary
 
@@ -77,7 +77,7 @@ class Edge(object):
 
 class Node(object):
     def __init__(
-        self,
+        self: Node,
         name: str,
         edges: Dict[Node, List[Edge]] = {},
         neighbours: List[Node] = [],
@@ -110,10 +110,10 @@ class Node(object):
             )
         self.node_sid = node_sid
 
-    def __str__(self) -> str:
+    def __str__(self: Node) -> str:
         return self.name
 
-    def add_edge(self, edge: Edge) -> None:
+    def add_edge(self: Node, edge: Edge) -> None:
         """
         Add a new edge toward a specific neighbour
 
@@ -127,7 +127,7 @@ class Node(object):
         if edge not in self.edges[edge.remote]:
             self.edges[edge.remote].append(edge)
 
-    def add_neighbour(self, neighbour: Node) -> None:
+    def add_neighbour(self: Node, neighbour: Node) -> None:
         """
         Add a new neighbour to the lis tof neighbours
 
@@ -137,7 +137,7 @@ class Node(object):
         if neighbour not in self.neighbours:
             self.neighbours.append(neighbour)
 
-    def edges_to_list(self) -> List:
+    def edges_to_list(self: Node) -> List:
         """
         Return a JSON serializable list of edges
 
@@ -151,7 +151,7 @@ class Node(object):
                 edges.append(edge.to_dict())
         return edges
 
-    def edges_toward_node(self, node: Node) -> List[Edge]:
+    def edges_toward_node(self: Node, node: Node) -> List[Edge]:
         """
         Return the list of edges towards 'node'
 
@@ -162,7 +162,7 @@ class Node(object):
             return self.edges[node]
         return []
 
-    def get_name(self) -> str:
+    def get_name(self: Node) -> str:
         """
         Return the name of this node
 
@@ -170,7 +170,7 @@ class Node(object):
         """
         return self.name
 
-    def get_neighbours(self) -> List[Node]:
+    def get_neighbours(self: Node) -> List[Node]:
         """
         Return a list of neighbours
 
@@ -178,7 +178,7 @@ class Node(object):
         """
         return self.neighbours
 
-    def no_of_edges(self) -> int:
+    def no_of_edges(self: Node) -> int:
         """
         Return the total number of edges this node has
 
@@ -190,7 +190,7 @@ class Node(object):
             count += len(self.edges[node])
         return count
 
-    def node_to_dict(self) -> Dict:
+    def node_to_dict(self: Node) -> Dict[str, Any]:
         """
         Return a JSON serializable dict of the node, without any edges
 
@@ -201,7 +201,7 @@ class Node(object):
             d["node_sid"] = self.node_sid
         return d
 
-    def to_dict(self) -> Dict:
+    def to_dict(self: Node) -> Dict[str, Any]:
         """
         Return a JSON serializable dict of the object
 

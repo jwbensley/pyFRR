@@ -10,8 +10,8 @@ import typing
 
 
 class TestAllPaths:
-    input_topology_file: str = "examples/mesh.json"
+    input_topology_file: str = "examples/mesh/mesh.json"
     test_network: PyFrr = PyFrr(input_topology_file)
 
-    def test_all_paths(self):
+    def test_all_paths(self) -> None:
         assert len(self.test_network.all_paths) == 542
