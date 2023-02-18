@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List
+from typing import Dict
 
 from .node import Node
 from .path import NodePath, NodePaths
@@ -9,11 +9,9 @@ from .topology import Topology
 
 
 class AllPaths:
-    topology: Topology
-    paths: Dict[Node, Dict[Node, NodePaths]]
-
     def __init__(self: AllPaths, topology: Topology) -> None:
-        self.topology = topology
+        self.paths: Dict[Node, Dict[Node, NodePaths]] = {}
+        self.topology: Topology = topology
         self.calculate_paths()
 
     def __len__(self: AllPaths) -> int:
@@ -29,7 +27,7 @@ class AllPaths:
                 count += len(self.paths[source][target])
         return count
 
-    def all_simple_paths(
+    def calculate_nodepaths(
         self: AllPaths,
         all_paths: NodePaths,
         current_path: NodePath,
@@ -57,14 +55,14 @@ class AllPaths:
             for n in current_path[-1].get_neighbours()
             if n not in current_path
         ]:
-            current_path.add_node(neighbour)
+            current_path.append(neighbour)
 
             if neighbour == target:
-                all_paths.add_node_path(current_path.copy())
+                all_paths.append(current_path.copy())
                 current_path.pop()
                 continue
 
-            self.all_simple_paths(all_paths, current_path, source, target)
+            self.calculate_nodepaths(all_paths, current_path, source, target)
 
         if len(current_path) > 1:
             current_path.pop()
@@ -83,11 +81,37 @@ class AllPaths:
             for target in self.topology.get_nodes():
                 if source == target:
                     continue
-                self.paths[source][target] = self.all_simple_paths(
-                    all_paths=NodePaths(node_paths=[]),
-                    current_path=NodePath(expand_edges=False, node_path=[]),
+                self.paths[source][target] = self.calculate_nodepaths(
+                    all_paths=NodePaths(paths=[]),
+                    current_path=NodePath(expand_edges=False, path=[]),
                     source=source,
                     target=target,
                 )
 
         logging.info(f"Calculated {len(self)} {type(self)} paths")
+
+    def get_paths_between(
+        self: AllPaths, source: Node, target: Node
+    ) -> NodePaths:
+        """
+        Return the NodePaths obj for node paths between the source and target
+
+        :param Node source: Source of the NodePaths obj to return
+        :param Node target: Target of the NodePaths obj to return
+        :rtype: NodePaths
+        """
+        return self.paths[source][target]
+
+    def get_paths_between_by_name(
+        self: AllPaths, source: str, target: str
+    ) -> NodePaths:
+        """
+        Return the NodePaths obj for node paths between the source and target
+
+        :param str source: Source of the NodePaths obj to return
+        :param str target: Target of the NodePaths obj to return
+        :rtype: NodePaths
+        """
+        source_node: Node = self.topology.get_node_by_name(source)
+        target_node: Node = self.topology.get_node_by_name(target)
+        return self.get_paths_between(source_node, target_node)

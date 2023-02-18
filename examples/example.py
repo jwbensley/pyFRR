@@ -2,9 +2,15 @@
 
 import argparse
 from typing import Dict
+import os
 import sys
-from pyfrr.pyfrr import PyFrr
 
+sys.path.append(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "../")
+)
+
+from pyfrr.pyfrr import PyFrr
+from pyfrr.settings import Settings
 
 def parse_cli_args() -> Dict:
     parser = argparse.ArgumentParser(
@@ -26,9 +32,9 @@ def parse_cli_args() -> Dict:
         help="Topology file to parse",
         type=str,
         required=False,
-        default="examples/ecmp.json",
-        # default="examples/ring.json",
-        # default="examples/mesh.json",
+        #default="examples/ecmp/ecmp.json",
+        # default="examples/ring/ring.json",
+        default="examples/mesh/mesh.json",
     )
 
     return vars(parser.parse_args())
@@ -36,6 +42,9 @@ def parse_cli_args() -> Dict:
 
 def main():
     args: Dict = parse_cli_args()
+
+    if args["debug"]:
+        Settings.DEBUG = True
 
     p: PyFrr = PyFrr(args["topology"])
 

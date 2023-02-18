@@ -33,5 +33,11 @@ class Settings:
     # Graph Settings
     #
 
-    # Name of the weight field on a graph edge
-    EDGE_WEIGHT: str = "weight"
+    # Name of the weight key/value when loading from JSON
+    EDGE_WEIGHT_KEY: str = "weight"
+
+    # Highest possible weight value
+    HEIGHTEST_WEIGHT: int = sys.maxsize
+
+    # Invalid weight value, when a weight is not found
+    INVALID_WEIGHT: int = -1

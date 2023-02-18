@@ -1,80 +1,50 @@
 from __future__ import annotations
 
-from typing import List
+import logging
+from typing import Dict, List
 
 from .all_paths import AllPaths
-from .path import NodePaths
+from .node import Node
+from .path import NodePath, NodePaths
 from .settings import Settings
+from .topology import Topology
 
 
 class Spf(AllPaths):
-    def get_paths(self: Spf, source: str, target: str) -> List[NodePaths]:
-        """
-        Return all the shortest cost path(s) between source and target
+    def __init__(self: Spf, all_paths: AllPaths, topology: Topology) -> None:
+        self.all_paths: AllPaths = all_paths
+        self.paths: Dict[Node, Dict[Node, NodePaths]] = {}
+        self.topology: Topology = topology
+        self.calculate_paths()
 
-        :param str source: Source node name in graph
-        :param str target: Destination node name in graph
-        :rtype: List
+    def __len__(self: Spf) -> int:
         """
-        """
-        nx_paths: List = []
-        try:
-            nx_paths = list(
-                networkx.all_shortest_paths(
-                    self.topology.graph,
-                    source=source,
-                    target=target,
-                    weight=Settings.EDGE_WEIGHT,
-                )
-            )
-        except networkx.exception.NetworkXNoPath:
-            return []
+        Return the total number of lowest weight paths that have been found in
+        the topology.
 
-        cost: int = networkx.shortest_path_length(
-            self.topology.graph,
-            source=source,
-            target=target,
-            weight=Settings.EDGE_WEIGHT,
-        )
-        paths: List = []
-        shortest_path: List
-        for shortest_path in nx_paths:
-            paths.append(
-                Path.from_nx_list_spf(
-                    cost=cost, path=shortest_path, topology=self.topology
-                )
-            )
-        return paths
-        """
-        return []
-
-    def get_path_weight(self: Spf, path: List[NodePaths]) -> int:
-        """
-        Return the weight of an explicit path from source to target
-
-        :param str source: Source node name in graph
-        :param str target: Destination node name in graph
         :rtype: int
         """
-        return 0
+        count: int = 0
+        for source in self.paths:
+            for target in self.paths[source]:
+                count += len(self.paths[source][target])
+        return count
 
-    def get_weight(self: Spf, source: str, target: str) -> int:
+    def calculate_paths(self: Spf) -> None:
         """
-        Return the weight of the shortest path from source to target
+        Filter all_paths for the node paths and edge paths between all nodes in
+        the topology, which are the shortest weighted paths
 
-        :param str source: Source node name in graph
-        :param str target: Destination node name in graph
-        :rtype: int
+        :rtype: None
         """
-        """
-        try:
-            return networkx.shortest_path_length(
-                self.topology.graph,
-                source=source,
-                target=target,
-                weight=Settings.EDGE_WEIGHT,
-            )
-        except networkx.exception.NetworkXNoPath:
-            return 0
-        """
-        return 0
+        self.paths = {}
+        for source in self.topology.get_nodes():
+            self.paths[source] = {}
+            for target in self.topology.get_nodes():
+                if source == target:
+                    continue
+                self.paths[source][target] = self.all_paths.get_paths_between(
+                    source, target
+                ).get_lowest_weight_nodepaths()
+
+        logging.info(f"Calculated {len(self)} {type(self)} paths")
