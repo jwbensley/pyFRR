@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+from .settings import Settings
 from typing import Any, Dict, List
 
 
-class Edge(object):
+class Edge:
     def __init__(
         self,
         local: Node,
         remote: Node,
         adj_sid: int | None = None,
-        weight: int | None = None,
+        weight: int = Settings.DEFAULT_WEIGHT,
     ) -> None:
         if not local or not remote:
             raise ValueError("local and remote must be defined")
@@ -23,11 +24,11 @@ class Edge(object):
             )
         self.adj_sid = adj_sid
 
-        if type(weight) != int and weight != None:
-            raise ValueError(f"weight must be int or None, not {type(weight)}")
+        if type(weight) != int:
+            raise ValueError(f"weight must be int, not {type(weight)}")
         self.weight = weight
 
-    def __repr__(self: Edge) -> str:
+    def __str__(self: Edge) -> str:
         attrs: Dict = {}
         if self.adj_sid:
             attrs["adj_sid"] = self.adj_sid
@@ -48,15 +49,21 @@ class Edge(object):
             weight=self.weight,
         )
 
+    def get_weight(self: Edge) -> int:
+        """
+        Return the weight of this edge
+
+        :rtype: int
+        """
+        return self.weight
+
     def swap_nodes(self: Edge) -> None:
         """
         Reverse the source and targets of this edge
 
         :rtype: None
         """
-        temp: Node = self.local
-        self.local = self.remote
-        self.remote = temp
+        self.local, self.remote = self.remote, self.local
 
     def to_dict(self: Edge) -> Dict[str, Any]:
         """
@@ -75,7 +82,7 @@ class Edge(object):
         return d
 
 
-class Node(object):
+class Node:
     def __init__(
         self: Node,
         name: str,

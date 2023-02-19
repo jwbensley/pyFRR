@@ -71,37 +71,37 @@
         {
             "source": "PE1",
             "target": "P1",
-            "weight": 20,
+            "weight": 10,
             "adj_sid": 4211
         },
         {
             "source": "P1",
             "target": "PE1",
-            "weight": 20,
+            "weight": 10,
             "adj_sid": 4211
         },
         {
             "source": "PE1",
             "target": "PE2",
-            "weight": 50,
+            "weight": 10,
             "adj_sid": 4012
         },
         {
             "source": "PE2",
             "target": "PE1",
-            "weight": 50,
+            "weight": 10,
             "adj_sid": 4012
         },
         {
             "source": "PE1",
             "target": "PE5",
-            "weight": 50,
+            "weight": 10,
             "adj_sid": 4015
         },
         {
             "source": "PE5",
             "target": "PE1",
-            "weight": 50,
+            "weight": 10,
             "adj_sid": 4015
         },
         {
@@ -143,49 +143,49 @@
         {
             "source": "P1",
             "target": "P3",
-            "weight": 40,
+            "weight": 10,
             "adj_sid": 3013
         },
         {
             "source": "P3",
             "target": "P1",
-            "weight": 40,
+            "weight": 10,
             "adj_sid": 3013
         },
         {
             "source": "P1",
             "target": "P4",
-            "weight": 20,
+            "weight": 10,
             "adj_sid": 3014
         },
         {
             "source": "P4",
             "target": "P1",
-            "weight": 20,
+            "weight": 10,
             "adj_sid": 3014
         },
         {
             "source": "P2",
             "target": "P4",
-            "weight": 40,
+            "weight": 10,
             "adj_sid": 3024
         },
         {
             "source": "P4",
             "target": "P2",
-            "weight": 40,
+            "weight": 10,
             "adj_sid": 3024
         },
         {
             "source": "P4",
             "target": "P3",
-            "weight": 50,
+            "weight": 10,
             "adj_sid": 3043
         },
         {
             "source": "P3",
             "target": "P4",
-            "weight": 50,
+            "weight": 10,
             "adj_sid": 3043
         },
         {

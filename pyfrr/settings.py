@@ -36,6 +36,9 @@ class Settings:
     # Name of the weight key/value when loading from JSON
     EDGE_WEIGHT_KEY: str = "weight"
 
+    # Default edge weight when none is set
+    DEFAULT_WEIGHT: int = 0
+
     # Highest possible weight value
     HEIGHTEST_WEIGHT: int = sys.maxsize
 

@@ -1,57 +1,70 @@
 from __future__ import annotations
 
 import logging
-from copy import deepcopy
-from typing import Any, Iterator, List, TypeVar
+from typing import Iterator, List, Type, TypeVar, Union
 
 from .node import Edge, Node
 from .settings import Settings
 
-BASE_PATH = TypeVar('BASE_PATH')
+
+BASE_TYPE = TypeVar("BASE_TYPE", Edge, Node)
+BASE_PATH = TypeVar("BASE_PATH", bound="BasePath")
+BASE_PATHS = TypeVar("BASE_PATHS", bound="BasePaths")
 
 
-class BasePath(object):
+class BasePath:
     """
     Base class for *Path objects
     """
 
-    def __init__(self: BasePath, path: List = []) -> None:
-        self.path = path
+    def __init__(self: BASE_PATH, path: List = []) -> None:
+        self.path: List = path
+        self.path_type: Type
+        logging.debug(
+            f"Init'd {self.__class__} @{hex(id(self))} with path len {len(self)}"
+        )
 
-    def __contains__(self: BasePath, item: Any) -> bool:
+    def __contains__(self: BASE_PATH, item: BASE_TYPE) -> bool:
         return item in self.path
 
-    """
-    def __getitem__(self: BasePath, index: slice | int) -> BASE_PATH | Any:
-        # Currently if you slice a NodePath, all the edges need to be recalculated
-        # instead of being copied from the selected node onwards.
-        # FIXME / TODO
-        if isinstance(index, slice):
-            return BasePath(
-                path=self.path[index.start : index.stop : index.step],
-            )
-        return self.path[index]
-    """
+    # def __getitem__(self: BASE_PATH, index: int) -> BASE_TYPE:
+    #    """
+    #    Support for slicing is in slice()
+    #
+    #    :param int index: Index in path to return
+    #    :rtype: BASE_TYPE
+    #    """
+    #    return self.path[index]
 
-    def __iter__(self: BasePath) -> Iterator:
+    def __iter__(self: BASE_PATH) -> Iterator:
         return self.path.__iter__()
 
-    def __len__(self: BasePath) -> int:
+    def __len__(self: BASE_PATH) -> int:
         return len(self.path)
 
-    def __nonzero__(self: BasePath) -> bool:
+    def __nonzero__(self: BASE_PATH) -> bool:
         return bool(self.path)
 
-    def __repr__(self: BasePath) -> str:
-        return str([str(item) for item in self.path])
+    def __str__(self: BASE_PATH) -> str:
+        if not self.path:
+            return ""
 
-    def append(self: BasePath, item: Any) -> None:
+        return (
+            f"Weight {self.get_weight()}: {[str(item) for item in self.path]}"
+        )
+
+    def append(self: BASE_PATH, item: BASE_TYPE) -> None:
         """
         Add a new itme to the end of the path
 
-        :param Any item: New item obj to append
+        :param BASE_TYPE item: New item obj to append
         :rtype: None
         """
+        if type(item) != self.path_type:
+            raise ValueError(
+                f"Can't append item of type {type(item)} to path of type "
+                f"{type(self)}"
+            )
         if item not in self.path:
             self.path.append(item)
 
@@ -61,38 +74,97 @@ class BasePath(object):
 
         :rtype: BASE_PATH
         """
-        return deepcopy(self)
+        return self.__class__(path=self.path.copy())
+
+    def get_weight(self: BASE_PATH) -> int:
+        return 0
+
+    def pop(self: BASE_PATH, i: int = -1) -> BASE_TYPE:
+        """
+        Remove the item at path index i from and return it
+
+        :param int i: Item index to remove from list
+        :rtype: Edge or Node
+        """
+        if i < len(self.path):
+            return self.path.pop(i)
+
+    def slice(
+        self: BASE_PATH,
+        start: int = 0,
+        stop: int | None = None,
+        step: int = 1,
+    ) -> BASE_PATH:
+        """
+        Seperate this from __getitem__ due to the type hinting mess it creates
+        when __getitem__ has to return a slice or a single item
+
+        Currently if you slice a NodePath, all the edges need to be recalculated
+        instead of being copied from the selected node onwards.
+        FIXME / TODO
+
+        :param slice index: Index range to slice from/to with step size
+        :rtype: BASE_PATH
+        """
+        return self.__class__(self.path[start:stop:step])
 
 
-class BasePaths(object):
+class BasePaths:
     """
     Base class for *Paths objects
     """
 
-    def __init__(self: BasePaths, paths: List = []) -> None:
+    def __init__(self: BASE_PATHS, paths: List = []) -> None:
         self.paths: List = paths
 
-    def __getitem__(
-        self: BasePaths, index: slice | int
-    ) -> BasePaths | BasePath:
-        if isinstance(index, slice):
-            return BasePaths(self.paths[index.start : index.stop : index.step])
+    def __getitem__(self: BASE_PATHS, index: int) -> Union[NodePath, EdgePath]:
+        """
+        Support for slicing is in slice()
+        """
         return self.paths[index]
 
-    def __iter__(self: BasePaths) -> Iterator:
+    def __iter__(self: BASE_PATHS) -> Iterator:
         return self.paths.__iter__()
 
-    def __len__(self: BasePaths) -> int:
+    def __len__(self: BASE_PATHS) -> int:
         return len(self.paths)
 
-    def __nonzero__(self: BasePaths) -> bool:
+    def __nonzero__(self: BASE_PATHS) -> bool:
         return bool(self.paths)
 
-    def __repr__(self: BasePaths) -> str:
+    def __str__(self: BASE_PATHS) -> str:
+        if not self.paths:
+            return ""
+
         s: str = ""
         for path in self.paths:
             s += f"{path}\n"
         return s
+
+    def get_weight(self: BASE_PATHS) -> int:
+        """
+        Return the weight of this Paths object
+
+        :rtype: int
+        """
+        if self.paths:
+            return self.paths[0].get_weight()
+        return 0
+
+    def slice(
+        self: BASE_PATHS,
+        start: int = 0,
+        stop: int | None = None,
+        step: int = 1,
+    ) -> BASE_PATHS:
+        """
+        Seperate this from __getitem__ due to the type hinting mess it creates
+        when __getitem__ has to return a slice or a single item
+
+        :param slice index: Index range to slice from/to with step size
+        :rtype: BASE_PATHS
+        """
+        return self.__class__(self.paths[start:stop:step])
 
 
 class EdgePath(BasePath):
@@ -100,10 +172,19 @@ class EdgePath(BasePath):
     A list of edges along a NodePath
     """
 
+    """
     def __init__(self: EdgePath, path: List[Edge] = []) -> None:
-        self.path: List[Edge] = path
+        self.path = path
         logging.debug(
             f"Init'd EdgePath {hex(id(self))} with {len(self)} edges: {self}"
+        )
+    """
+
+    def __init__(self: EdgePath, path: List[Edge] = []) -> None:
+        self.path: List[Edge] = path
+        self.path_type: Type[Edge] = Edge
+        logging.debug(
+            f"Init'd {self.__class__} @{hex(id(self))} with path len {len(self)}"
         )
 
     """
@@ -111,10 +192,21 @@ class EdgePath(BasePath):
         return edge in self.edge_path
     """
 
+    def __getitem__(self: EdgePath, index: int) -> Edge:
+        """
+        Support for slicing is in slice()
+
+        :param int index: Index in path to return
+        :rtype: Edge
+        """
+        return self.path[index]
+
+    """
     def __getitem__(self: EdgePath, index: slice | int) -> List[Edge] | Edge:
         if isinstance(index, slice):
             return self.path[index.start : index.stop : index.step]
         return self.path[index]
+    """
 
     """
     def __len__(self: EdgePath) -> int:
@@ -127,34 +219,34 @@ class EdgePath(BasePath):
         return str([str(edge) for edge in self.edge_path])
     """
 
-    def append(self: EdgePath, edge: Edge) -> None:
-        """
-        Add a new edge to this edge path
+    # def append(self: EdgePath, edge: Edge) -> None:
+    #    """
+    #    Add a new edge to this edge path
+    #
+    #    :param Edge edge: New Edge obj to add
+    #    :rtype: None
+    #    """
+    #    if edge not in self.path:
+    #        self.path.append(edge)
 
-        :param Edge edge: New Edge obj to add
-        :rtype: None
-        """
-        if edge not in self.path:
-            self.path.append(edge)
+    # def copy(self: EdgePath) -> EdgePath:
+    #    """
+    #    Return a copy of this obj
+    #
+    #    :rtype: EdgePath
+    #    """
+    #    return EdgePath(self.path.copy())
 
-    def copy(self: EdgePath) -> EdgePath:
-        """
-        Return a copy of this obj
+    # def pop(self: EdgePath, i: int = -1) -> Edge:
+    #    """
+    #    Remove the edge at index i from this edge path and return it
+    #
+    #    :param int i: Edge index to remove from list
+    #    :rtype: Edge
+    #    """
+    #    return self.path.pop(i)
 
-        :rtype: EdgePath
-        """
-        return EdgePath(self.path.copy())
-
-    def pop(self: EdgePath, i: int = -1) -> Edge:
-        """
-        Remove the edge at index i from this edge path and return it
-
-        :param int i: Edge index to remove from list
-        :rtype: Edge
-        """
-        return self.path.pop(i)
-
-    def source(self: EdgePath) -> Node:
+    def get_source(self: EdgePath) -> Node:
         """
         The first node in the edge path
 
@@ -162,7 +254,7 @@ class EdgePath(BasePath):
         """
         return self.path[0].local
 
-    def target(self: EdgePath) -> Node:
+    def get_target(self: EdgePath) -> Node:
         """
         The last node in the edge path
 
@@ -170,16 +262,16 @@ class EdgePath(BasePath):
         """
         return self.path[-1].remote
 
-    def weight(self: EdgePath) -> int:
+    def get_weight(self: EdgePath) -> int:
         """
         Return the total weight of this EdgePath
 
         :rtype: int
         """
         total: int = 0
-        edge: Edge
-        for edge in self.path:
-            total += edge.weight
+        item: Edge
+        for item in self.path:
+            total += item.get_weight()
         return total
 
 
@@ -189,14 +281,13 @@ class EdgePaths(BasePaths):
     """
 
     def __init__(self: EdgePaths, paths: List[EdgePath] = []) -> None:
-        self.paths: List[EdgePath] = []
+        self.paths: List[EdgePath] = paths
 
         for path in paths:
             self.add_edge_path(path)
 
         logging.debug(
-            f"Init'd EdgePaths {hex(id(self))} with {len(self)} edge paths: "
-            f"{self}"
+            f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
         )
 
     def add_edge_path(self: EdgePaths, path: EdgePath) -> None:
@@ -207,7 +298,7 @@ class EdgePaths(BasePaths):
         :rtype: None
         """
         for i, existing_path in enumerate(self.paths):
-            if path.weight() <= existing_path.weight():
+            if path.get_weight() <= existing_path.get_weight():
                 self.paths.insert(i, path)
                 return
         self.paths.append(path)
@@ -216,7 +307,7 @@ class EdgePaths(BasePaths):
     def expand_node_path(
         all_edge_paths: EdgePaths,
         edge_path: EdgePath,
-        node_path: NodePath | Node,
+        node_path: NodePath,
     ) -> EdgePaths | None:
         """
         Recursively (DFS) expand a node path to a list of edge paths along the
@@ -230,12 +321,12 @@ class EdgePaths(BasePaths):
         if len(node_path) < 2:
             return None
 
-        for edge in [e for e in node_path.edges(0) if e not in edge_path]:
+        for edge in [e for e in node_path.get_edges(0) if e not in edge_path]:
             edge_path.append(edge)
             if not EdgePaths.expand_node_path(
                 all_edge_paths=all_edge_paths,
                 edge_path=edge_path,
-                node_path=node_path[1:],
+                node_path=node_path.slice(1),
             ):
                 all_edge_paths.add_edge_path(edge_path.copy())
                 edge_path.pop()
@@ -251,7 +342,7 @@ class EdgePaths(BasePaths):
         :rtype: int
         """
         if self.paths:
-            return self.paths[0].weight()
+            return self.paths[0].get_weight()
         return Settings.INVALID_WEIGHT
 
     def get_lowest_weighted_paths(self: EdgePaths) -> EdgePaths:
@@ -263,9 +354,9 @@ class EdgePaths(BasePaths):
         paths: EdgePaths = EdgePaths(paths=[])
 
         if self.paths:
-            lowest_weight: int = self.paths[0].weight()
+            lowest_weight: int = self.paths[0].get_weight()
             for path in self.paths:
-                if path.weight() == lowest_weight:
+                if path.get_weight() == lowest_weight:
                     paths.add_edge_path(path)
                     continue
                 break
@@ -301,15 +392,25 @@ class NodePath(BasePath):
         self: NodePath, expand_edges: bool = True, path: List[Node] = []
     ) -> None:
         self.path: List[Node] = path
-        self.edge_paths: EdgePaths
-
+        self.edge_paths: EdgePaths = EdgePaths()
+        self.path_type: Type[Node] = Node
         logging.debug(
-            f"Init'd NodePath {hex(id(self))} with {len(self)} nodes: {self}"
+            f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
         )
 
         if expand_edges:
             self.update_edge_paths()
 
+    def __getitem__(self: NodePath, index: int) -> Node:
+        """
+        Support for slicing is in slice()
+
+        :param int index: Index in path to return
+        :rtype: Node
+        """
+        return self.path[index]
+
+    """
     def __getitem__(self: NodePath, index: slice | int) -> NodePath | Node:
         # Currently if you slice a NodePath, all the edges need to be recalculated
         # instead of being copied from the selected node onwards.
@@ -319,6 +420,7 @@ class NodePath(BasePath):
                 path=self.path[index.start : index.stop : index.step],
             )
         return self.path[index]
+    """
 
     """
     def __iter__(self: NodePath) -> Iterator:
@@ -334,25 +436,25 @@ class NodePath(BasePath):
         return str([str(node) for node in self.node_path])
     """
 
-    def append(self: NodePath, node: Node) -> None:
-        """
-        Add a new node to the end of the node path
+    # def append(self: NodePath, node: Node) -> None:
+    #    """
+    #    Add a new node to the end of the node path
+    #
+    #    :param Node node: New node obj to append
+    #    :rtype: None
+    #    """
+    #    if node not in self.path:
+    #        self.path.append(node)
 
-        :param Node node: New node obj to append
-        :rtype: None
-        """
-        if node not in self.path:
-            self.path.append(node)
+    # def copy(self: NodePath) -> NodePath:
+    #    """
+    #    Return a copy of this obj
+    #
+    #    :rtype: NodePath
+    #    """
+    #    return NodePath(path=self.path.copy())
 
-    def copy(self: NodePath) -> NodePath:
-        """
-        Return a copy of this obj
-
-        :rtype: NodePath
-        """
-        return NodePath(path=self.path.copy())
-
-    def edges(self: NodePath, i: int) -> List[Edge]:
+    def get_edges(self: NodePath, i: int) -> List[Edge]:
         """
         Return the list of edges at the given index in the node path
 
@@ -384,6 +486,14 @@ class NodePath(BasePath):
         """
         return self.path[-1]
 
+    def get_weight(self: NodePath) -> int:
+        """
+        Return the total weight of this NodePath
+
+        :rtype: int
+        """
+        return self.edge_paths.get_weight()
+
     def no_edge_paths(self: NodePath) -> int:
         """
         The number of edge paths between the source and target node
@@ -392,14 +502,14 @@ class NodePath(BasePath):
         """
         return len(self.edge_paths)
 
-    def pop(self: NodePath, i: int = -1) -> Node:
-        """
-        Remove the node at index i from this node path and return it
-
-        :param int i: Node index to remove from list
-        :rtype: Node
-        """
-        return self.path.pop(i)
+    # def pop(self: NodePath, i: int = -1) -> Node:
+    #    """
+    #    Remove the node at index i from this node path and return it
+    #
+    #    :param int i: Node index to remove from list
+    #    :rtype: Node
+    #    """
+    #    return self.path.pop(i)
 
     def set_source(self: NodePath, source: Node) -> None:
         """
@@ -431,7 +541,7 @@ class NodePaths(BasePaths):
         self.paths: List[NodePath] = paths
 
         logging.debug(
-            f"Init'd NodePaths {hex(id(self))} with {len(self)} node paths"
+            f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
         )
 
     def append(self: NodePaths, path: NodePath) -> None:
@@ -494,7 +604,9 @@ class NodePaths(BasePaths):
             return self.paths[0].get_target()
         return None
 
-    def validate_endpoints(self: NodePaths, source: Node, target: Node) -> None:
+    def validate_endpoints(
+        self: NodePaths, source: Node, target: Node
+    ) -> None:
         """
         Confirm that the source and target nodes are the same as the source and
         target nodes which this NodePaths object represents paths between
