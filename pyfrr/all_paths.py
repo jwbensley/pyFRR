@@ -4,7 +4,7 @@ import logging
 from typing import Dict
 
 from .node import Node
-from .path import NodePath, NodePaths, EdgePaths, EdgePath
+from .path import EdgePath, EdgePaths, NodePath, NodePaths
 from .topology import Topology
 
 
@@ -87,21 +87,6 @@ class AllPaths:
                     source=source,
                     target=target,
                 )
-                print(f"source: {source}, target{target}")
-                print(self.paths[source][target])
-                p0: NodePath = self.paths[source][target][0]
-                print(f"path 0: {p0}")
-                print(f"{len(p0.edge_paths)} edge paths")
-                e0: EdgePath = p0.edge_paths[0]
-                print(f"len of edgepath 0: {len(e0)}")
-                print(e0)
-                e1: EdgePath = p0.edge_paths[1]
-                print(f"len of edgepath 1: {len(e1)}")
-                print(e1)
-                e2: EdgePath = p0.edge_paths[2]
-                print(f"len of edgepath 2: {len(e2)}")
-                print(e2)
-                exit(0)
 
         logging.info(f"Calculated {len(self)} {type(self)} paths")
 

@@ -6,7 +6,6 @@ from typing import Iterator, List, Type, TypeVar, Union
 from .node import Edge, Node
 from .settings import Settings
 
-
 BASE_TYPE = TypeVar("BASE_TYPE", Edge, Node)
 BASE_PATH = TypeVar("BASE_PATH", bound="BasePath")
 BASE_PATHS = TypeVar("BASE_PATHS", bound="BasePaths")
@@ -26,15 +25,6 @@ class BasePath:
 
     def __contains__(self: BASE_PATH, item: BASE_TYPE) -> bool:
         return item in self.path
-
-    # def __getitem__(self: BASE_PATH, index: int) -> BASE_TYPE:
-    #    """
-    #    Support for slicing is in slice()
-    #
-    #    :param int index: Index in path to return
-    #    :rtype: BASE_TYPE
-    #    """
-    #    return self.path[index]
 
     def __iter__(self: BASE_PATH) -> Iterator:
         return self.path.__iter__()
@@ -86,8 +76,7 @@ class BasePath:
         :param int i: Item index to remove from list
         :rtype: Edge or Node
         """
-        if i < len(self.path):
-            return self.path.pop(i)
+        return self.path.pop(i)
 
     def slice(
         self: BASE_PATH,
@@ -106,13 +95,16 @@ class BasePath:
         :param slice index: Index range to slice from/to with step size
         :rtype: BASE_PATH
         """
-        return self.__class__(self.path[start:stop:step])
+        return self.__class__(path=self.path[start:stop:step])
 
 
 class BasePaths:
     """
     Base class for *Paths objects
     """
+
+    class ErrorNoPathsDefined(Exception):
+        pass
 
     def __init__(self: BASE_PATHS, paths: List = []) -> None:
         self.paths: List = paths
@@ -141,16 +133,6 @@ class BasePaths:
             s += f"{path}\n"
         return s
 
-    def get_weight(self: BASE_PATHS) -> int:
-        """
-        Return the weight of this Paths object
-
-        :rtype: int
-        """
-        if self.paths:
-            return self.paths[0].get_weight()
-        return 0
-
     def slice(
         self: BASE_PATHS,
         start: int = 0,
@@ -164,20 +146,12 @@ class BasePaths:
         :param slice index: Index range to slice from/to with step size
         :rtype: BASE_PATHS
         """
-        return self.__class__(self.paths[start:stop:step])
+        return self.__class__(paths=self.paths[start:stop:step])
 
 
 class EdgePath(BasePath):
     """
     A list of edges along a NodePath
-    """
-
-    """
-    def __init__(self: EdgePath, path: List[Edge] = []) -> None:
-        self.path = path
-        logging.debug(
-            f"Init'd EdgePath {hex(id(self))} with {len(self)} edges: {self}"
-        )
     """
 
     def __init__(self: EdgePath, path: List[Edge] = []) -> None:
@@ -187,11 +161,6 @@ class EdgePath(BasePath):
             f"Init'd {self.__class__} @{hex(id(self))} with path len {len(self)}"
         )
 
-    """
-    def __contains__(self: EdgePath, edge: Edge) -> bool:
-        return edge in self.edge_path
-    """
-
     def __getitem__(self: EdgePath, index: int) -> Edge:
         """
         Support for slicing is in slice()
@@ -200,51 +169,6 @@ class EdgePath(BasePath):
         :rtype: Edge
         """
         return self.path[index]
-
-    """
-    def __getitem__(self: EdgePath, index: slice | int) -> List[Edge] | Edge:
-        if isinstance(index, slice):
-            return self.path[index.start : index.stop : index.step]
-        return self.path[index]
-    """
-
-    """
-    def __len__(self: EdgePath) -> int:
-        return len(self.edge_path)
-
-    def __nonzero__(self: EdgePath) -> bool:
-        return bool(self.edge_path)
-
-    def __repr__(self: EdgePath) -> str:
-        return str([str(edge) for edge in self.edge_path])
-    """
-
-    # def append(self: EdgePath, edge: Edge) -> None:
-    #    """
-    #    Add a new edge to this edge path
-    #
-    #    :param Edge edge: New Edge obj to add
-    #    :rtype: None
-    #    """
-    #    if edge not in self.path:
-    #        self.path.append(edge)
-
-    # def copy(self: EdgePath) -> EdgePath:
-    #    """
-    #    Return a copy of this obj
-    #
-    #    :rtype: EdgePath
-    #    """
-    #    return EdgePath(self.path.copy())
-
-    # def pop(self: EdgePath, i: int = -1) -> Edge:
-    #    """
-    #    Remove the edge at index i from this edge path and return it
-    #
-    #    :param int i: Edge index to remove from list
-    #    :rtype: Edge
-    #    """
-    #    return self.path.pop(i)
 
     def get_source(self: EdgePath) -> Node:
         """
@@ -284,13 +208,13 @@ class EdgePaths(BasePaths):
         self.paths: List[EdgePath] = paths
 
         for path in paths:
-            self.add_edge_path(path)
+            self.append(path)
 
         logging.debug(
             f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
         )
 
-    def add_edge_path(self: EdgePaths, path: EdgePath) -> None:
+    def append(self: EdgePaths, path: EdgePath) -> None:
         """
         Add the new edge path in ascending weight order
 
@@ -328,22 +252,22 @@ class EdgePaths(BasePaths):
                 edge_path=edge_path,
                 node_path=node_path.slice(1),
             ):
-                all_edge_paths.add_edge_path(edge_path.copy())
+                all_edge_paths.append(edge_path.copy())
                 edge_path.pop()
 
         if len(edge_path) > 0:
             edge_path.pop()
         return all_edge_paths
 
-    def get_lowest_edgepath_weight(self: EdgePaths) -> int:
+    def get_lowest_path_weight(self: EdgePaths) -> int:
         """
-        Return the weigth of the lowest weighted EdgePath in this EdgePaths obj
+        Return the weight of the lowest EdgePath in this EdgePaths obj
 
         :rtype: int
         """
         if self.paths:
             return self.paths[0].get_weight()
-        return Settings.INVALID_WEIGHT
+        return 0
 
     def get_lowest_weighted_paths(self: EdgePaths) -> EdgePaths:
         """
@@ -353,14 +277,15 @@ class EdgePaths(BasePaths):
         """
         paths: EdgePaths = EdgePaths(paths=[])
 
-        if self.paths:
-            lowest_weight: int = self.paths[0].get_weight()
-            for path in self.paths:
-                if path.get_weight() == lowest_weight:
-                    paths.add_edge_path(path)
-                    continue
-                break
+        if not self.paths:
+            return paths
 
+        lowest_weight: int = self.get_lowest_path_weight()
+        for path in self.paths:
+            if path.get_weight() == lowest_weight:
+                paths.append(path)
+                continue
+            break
         return paths
 
     @staticmethod
@@ -410,50 +335,6 @@ class NodePath(BasePath):
         """
         return self.path[index]
 
-    """
-    def __getitem__(self: NodePath, index: slice | int) -> NodePath | Node:
-        # Currently if you slice a NodePath, all the edges need to be recalculated
-        # instead of being copied from the selected node onwards.
-        # FIXME / TODO
-        if isinstance(index, slice):
-            return NodePath(
-                path=self.path[index.start : index.stop : index.step],
-            )
-        return self.path[index]
-    """
-
-    """
-    def __iter__(self: NodePath) -> Iterator:
-        return self.node_path.__iter__()
-
-    def __len__(self: NodePath) -> int:
-        return len(self.node_path)
-
-    def __nonzero__(self: NodePath) -> bool:
-        return bool(self.node_path)
-
-    def __repr__(self: NodePath) -> str:
-        return str([str(node) for node in self.node_path])
-    """
-
-    # def append(self: NodePath, node: Node) -> None:
-    #    """
-    #    Add a new node to the end of the node path
-    #
-    #    :param Node node: New node obj to append
-    #    :rtype: None
-    #    """
-    #    if node not in self.path:
-    #        self.path.append(node)
-
-    # def copy(self: NodePath) -> NodePath:
-    #    """
-    #    Return a copy of this obj
-    #
-    #    :rtype: NodePath
-    #    """
-    #    return NodePath(path=self.path.copy())
-
     def get_edges(self: NodePath, i: int) -> List[Edge]:
         """
         Return the list of edges at the given index in the node path
@@ -462,13 +343,13 @@ class NodePath(BasePath):
         """
         return self.path[i].edges_toward_node(self.path[i + 1])
 
-    def get_lowest_edgepath_weight(self: NodePath) -> int:
+    def get_lowest_path_weight(self: NodePath) -> int:
         """
         Return the weight of the lowest weighted EdgePath along this NodePath
 
         :rtype: int
         """
-        return self.edge_paths.get_lowest_edgepath_weight()
+        return self.edge_paths.get_lowest_path_weight()
 
     def get_source(self: NodePath) -> Node:
         """
@@ -488,11 +369,11 @@ class NodePath(BasePath):
 
     def get_weight(self: NodePath) -> int:
         """
-        Return the total weight of this NodePath
+        Return the weight of the lowest weighted EdgePath along this NodePath
 
         :rtype: int
         """
-        return self.edge_paths.get_weight()
+        return self.get_lowest_path_weight()
 
     def no_edge_paths(self: NodePath) -> int:
         """
@@ -501,15 +382,6 @@ class NodePath(BasePath):
         :rtype: int
         """
         return len(self.edge_paths)
-
-    # def pop(self: NodePath, i: int = -1) -> Node:
-    #    """
-    #    Remove the node at index i from this node path and return it
-    #
-    #    :param int i: Node index to remove from list
-    #    :rtype: Node
-    #    """
-    #    return self.path.pop(i)
 
     def set_source(self: NodePath, source: Node) -> None:
         """
@@ -558,31 +430,44 @@ class NodePaths(BasePaths):
         if path not in self.paths:
             self.paths.append(path)
 
-    def get_lowest_weight_nodepaths(self: NodePaths) -> NodePaths:
+    def get_lowest_path_weight(self: NodePaths) -> int:
+        """
+        Return the weight of the lowest weighted NodePath in this NodePaths obj
+
+        :rtype: int
+        """
+        if not self.paths:
+            return 0
+
+        lowest_weight: int = Settings.HEIGHTEST_WEIGHT
+        for path in self.paths:
+            weight: int = path.get_lowest_path_weight()
+            if weight < lowest_weight:
+                lowest_weight = weight
+        return lowest_weight
+
+    def get_lowest_weighted_paths(self: NodePaths) -> NodePaths:
         """
         Return a NodePaths obj with only the lowest weight NodePath's from
         this NodePaths obj
 
         :rtype: NodePaths
         """
-        if not self.paths:
-            return NodePaths(paths=[])
-
         lowest_weight: int = Settings.HEIGHTEST_WEIGHT
-        node_paths: NodePaths = NodePaths(paths=[])
+        paths: NodePaths = NodePaths(paths=[])
+
+        if not self.paths:
+            return paths
 
         path: NodePath
         for path in self.paths:
-            node_path_weight: int = path.get_lowest_edgepath_weight()
+            path_weight: int = path.get_lowest_path_weight()
 
-            if lowest_weight == Settings.HEIGHTEST_WEIGHT:
-                lowest_weight = node_path_weight
-            if node_path_weight < lowest_weight:
-                node_paths = NodePaths(paths=[path])
-            elif node_path_weight == lowest_weight:
-                node_paths.append(path)
-
-        return node_paths
+            if path_weight < lowest_weight:
+                paths = NodePaths(paths=[path])
+            elif path_weight == lowest_weight:
+                paths.append(path)
+        return paths
 
     def get_source(self: NodePaths) -> Node | None:
         """
@@ -604,9 +489,7 @@ class NodePaths(BasePaths):
             return self.paths[0].get_target()
         return None
 
-    def validate_endpoints(
-        self: NodePaths, source: Node, target: Node
-    ) -> None:
+    def validate_endpoints(self: NodePaths, source: Node, target: Node) -> None:
         """
         Confirm that the source and target nodes are the same as the source and
         target nodes which this NodePaths object represents paths between

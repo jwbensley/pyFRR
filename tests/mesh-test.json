@@ -60,25 +60,25 @@
             "source": "PE1",
             "target": "P1",
             "adj_sid": 4211,
-            "weight": 20
+            "weight": 10
         },
         {
             "source": "PE1",
             "target": "PE2",
             "adj_sid": 4012,
-            "weight": 50
+            "weight": 10
         },
         {
             "source": "PE1",
             "target": "PE5",
             "adj_sid": 4015,
-            "weight": 50
+            "weight": 10
         },
         {
             "source": "PE2",
             "target": "PE1",
             "adj_sid": 4012,
-            "weight": 50
+            "weight": 10
         },
         {
             "source": "PE2",
@@ -102,7 +102,7 @@
             "source": "PE5",
             "target": "PE1",
             "adj_sid": 4015,
-            "weight": 50
+            "weight": 10
         },
         {
             "source": "PE5",
@@ -126,7 +126,7 @@
             "source": "P1",
             "target": "PE1",
             "adj_sid": 4211,
-            "weight": 20
+            "weight": 10
         },
         {
             "source": "P1",
@@ -138,13 +138,13 @@
             "source": "P1",
             "target": "P3",
             "adj_sid": 3013,
-            "weight": 40
+            "weight": 10
         },
         {
             "source": "P1",
             "target": "P4",
             "adj_sid": 3014,
-            "weight": 20
+            "weight": 10
         },
         {
             "source": "P2",
@@ -162,19 +162,19 @@
             "source": "P2",
             "target": "P4",
             "adj_sid": 3024,
-            "weight": 40
+            "weight": 10
         },
         {
             "source": "P3",
             "target": "P1",
             "adj_sid": 3013,
-            "weight": 40
+            "weight": 10
         },
         {
             "source": "P3",
             "target": "P4",
             "adj_sid": 3043,
-            "weight": 50
+            "weight": 10
         },
         {
             "source": "P3",
@@ -192,19 +192,19 @@
             "source": "P4",
             "target": "P1",
             "adj_sid": 3014,
-            "weight": 20
+            "weight": 10
         },
         {
             "source": "P4",
             "target": "P2",
             "adj_sid": 3024,
-            "weight": 40
+            "weight": 10
         },
         {
             "source": "P4",
             "target": "P3",
             "adj_sid": 3043,
-            "weight": 50
+            "weight": 10
         },
         {
             "source": "P4",

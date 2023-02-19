@@ -45,6 +45,6 @@ class Spf(AllPaths):
                     continue
                 self.paths[source][target] = self.all_paths.get_paths_between(
                     source, target
-                ).get_lowest_weight_nodepaths()
+                ).get_lowest_weighted_paths()
 
         logging.info(f"Calculated {len(self)} {type(self)} paths")

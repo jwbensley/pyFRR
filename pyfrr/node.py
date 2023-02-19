@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from .settings import Settings
 from typing import Any, Dict, List
+
+from .settings import Settings
 
 
 class Edge:
