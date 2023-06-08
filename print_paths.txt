@@ -1,0 +1,22 @@
+!
+for src in TestSpfPaths.pp.topology.get_nodes():
+    print(f"\"{src}\": {{")
+    for dst in TestSpfPaths.pp.topology.get_nodes():
+        if src == dst:
+            continue
+        print(f"    \"{dst}\": [")
+        paths: NodePaths = TestSpfPaths.pp.spf_paths.get_paths_between(
+            src, dst
+        )
+        path: NodePath
+        for path in paths:
+            print(f"        {str(path).split(':')[1].strip()},")
+        print(f"    ],")
+        """
+        path: NodePath
+        for path in paths:
+            assert [str(node) for node in path] in topo["all_paths"][
+                src.get_name()
+            ][dst.get_name()]
+        """
+    print("},")
