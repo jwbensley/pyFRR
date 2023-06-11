@@ -7,8 +7,11 @@ from typing import Any, Dict, List
 
 from .node import Edge, Node
 
+logger = logging.getLogger(__name__)
+
 
 class Topology:
+    log_prefix: str = __name__
     nodes: Dict[str, Node]
     topology_file: str
 
@@ -57,14 +60,14 @@ class Topology:
         for e in topology["links"]:
             edge: Edge = Edge.from_dict(t.nodes, e)
             if edge.local.get_name() not in t.nodes:
-                logging.error(
-                    f"Can't add link from {edge.local} to {edge.remote}, "
-                    f"{edge.local} is not in topology"
+                logger.error(
+                    f"{Topology.log_prefix}: Can't add link from {edge.local} "
+                    f"to {edge.remote}, {edge.local} is not in topology"
                 )
             elif edge.remote.get_name() not in t.nodes:
-                logging.error(
-                    f"Can't add link from {edge.local} to {edge.remote}, "
-                    f"{edge.remote} is not in topology"
+                logger.error(
+                    f"{Topology.log_prefix}: Can't add link from {edge.local} "
+                    f"to {edge.remote}, {edge.remote} is not in topology"
                 )
             t.nodes[edge.local.get_name()].add_edge(edge)
 
@@ -79,9 +82,9 @@ class Topology:
                         new_edge.swap_nodes()
                         node.add_edge(new_edge)
 
-        logging.debug(
-            f"Created topology with {t.no_of_nodes()} nodes and "
-            f"{t.no_of_edges()} edges"
+        logger.info(
+            f"{Topology.log_prefix}: Created topology with {t.no_of_nodes()} "
+            f"nodes and {t.no_of_edges()} edges"
         )
         return t
 
@@ -97,8 +100,9 @@ class Topology:
         try:
             topo_data = json.loads(json_data)
         except Exception as e:
-            logging.error(
-                f"Couldn't parse topology string as JSON: {json_data}"
+            logger.error(
+                f"{Topology.log_prefix}: Couldn't parse topology string as "
+                f"JSON: {json_data}"
             )
             raise e
 
@@ -119,7 +123,9 @@ class Topology:
             json_file = open(filename, "r")
             json_data = json_file.read()
         except Exception as e:
-            logging.error(f"Couldn't open topology file {filename}")
+            logger.error(
+                f"{Topology.log_prefix}: Couldn't open topology file {filename}"
+            )
             raise e
 
         json_file.close()
@@ -201,8 +207,9 @@ class Topology:
             topo_data["nodes"].append(node.node_to_dict())
             topo_data["links"] += node.edges_to_list()
 
-        logging.debug(
-            f"Created dict with {len(topo_data['nodes'])} nodes and "
+        logger.debug(
+            f"{Topology.log_prefix}: Created dict with "
+            f"{len(topo_data['nodes'])} nodes and "
             f"{len(topo_data['links'])} edges"
         )
 
@@ -233,7 +240,10 @@ class Topology:
             json_file = open(filename, "w")
             json_file.write(json_data)
         except Exception as e:
-            logging.error(f"Couldn't write topology file {filename}")
+            logger.error(
+                f"{Topology.log_prefix}: Couldn't write topology file "
+                f"{filename}"
+            )
             raise e
 
         json_file.close()

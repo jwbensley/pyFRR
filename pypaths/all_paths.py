@@ -7,8 +7,27 @@ from .node import Node
 from .path import NodePath, NodePaths
 from .topology import Topology
 
+logger = logging.getLogger(__name__)
+
 
 class AllPaths:
+    """
+    Calculate all paths between nodes in a topology
+    """
+
+    log_prefix: str = __name__
+
+    class NoPathsFound(Exception):
+        """
+        No paths exists between source and target
+        """
+
+        def __init__(self: Exception, source: str, target: str):
+            self.message: str = f"No paths exist between {source} and {target}"
+
+        def __str__(self):
+            return repr(self.message)
+
     def __init__(self: AllPaths, topology: Topology) -> None:
         self.paths: Dict[Node, Dict[Node, NodePaths]] = {}
         self.topology: Topology = topology
@@ -88,7 +107,7 @@ class AllPaths:
                     target=target,
                 )
 
-        logging.info(f"Calculated {len(self)} {type(self)} paths")
+        logger.info(f"{AllPaths.log_prefix}: Calculated {len(self)} paths")
 
     def get_paths_between(
         self: AllPaths, source: Node, target: Node
@@ -100,6 +119,10 @@ class AllPaths:
         :param Node target: Target of the NodePaths obj to return
         :rtype: NodePaths
         """
+        if target not in self.paths[source]:
+            return NodePaths(paths=[])
+        if not self.paths[source][target]:
+            return NodePaths(paths=[])
         return self.paths[source][target]
 
     def get_paths_between_by_name(

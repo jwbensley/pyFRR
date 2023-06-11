@@ -10,6 +10,8 @@ BASE_TYPE = TypeVar("BASE_TYPE", Edge, Node)
 BASE_PATH = TypeVar("BASE_PATH", bound="BasePath")
 BASE_PATHS = TypeVar("BASE_PATHS", bound="BasePaths")
 
+logger = logging.getLogger(__name__)
+
 
 class BasePath:
     """
@@ -19,9 +21,6 @@ class BasePath:
     def __init__(self: BASE_PATH, path: List = []) -> None:
         self.path: List = path
         self.path_type: Type
-        logging.debug(
-            f"Init'd {self.__class__} @{hex(id(self))} with path len {len(self)}"
-        )
 
     def __contains__(self: BASE_PATH, item: BASE_TYPE) -> bool:
         return item in self.path
@@ -151,14 +150,18 @@ class BasePaths:
 
 class EdgePath(BasePath):
     """
-    A list of edges along a NodePath
+    A list of Edges along a NodePath
     """
+
+    log_prefix: str = __name__
 
     def __init__(self: EdgePath, path: List[Edge] = []) -> None:
         self.path: List[Edge] = path
         self.path_type: Type[Edge] = Edge
-        logging.debug(
-            f"Init'd {self.__class__} @{hex(id(self))} with path len {len(self)}"
+        logger.log(
+            level=Settings.LOG_DEV_LEVEL,
+            msg=f"{EdgePath.log_prefix}: Init'd {self.__class__} @{hex(id(self))} "
+            f"with path len {len(self)}",
         )
 
     def __getitem__(self: EdgePath, index: int) -> Edge:
@@ -204,14 +207,18 @@ class EdgePaths(BasePaths):
     A list of EdgePath's stored in ascending in weight order
     """
 
+    log_prefix: str = __name__
+
     def __init__(self: EdgePaths, paths: List[EdgePath] = []) -> None:
         self.paths: List[EdgePath] = paths
 
         for path in paths:
             self.append(path)
 
-        logging.debug(
-            f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
+        logger.log(
+            level=Settings.LOG_DEV_LEVEL,
+            msg=f"{EdgePaths.log_prefix}: Init'd {type(self)} @{hex(id(self))} "
+            f"with {len(self)} paths",
         )
 
     def append(self: EdgePaths, path: EdgePath) -> None:
@@ -297,7 +304,10 @@ class EdgePaths(BasePaths):
         :rtype: EdgePaths
         """
         if len(path) > 1:
-            logging.debug(f"Going to expand node path {path}")
+            logger.log(
+                level=Settings.LOG_DEV_LEVEL,
+                msg=f"{EdgePaths.log_prefix}: Going to expand node path {path}",
+            )
             if edge_paths := EdgePaths.expand_node_path(
                 all_edge_paths=EdgePaths(paths=[]),
                 edge_path=EdgePath(path=[]),
@@ -309,18 +319,25 @@ class EdgePaths(BasePaths):
 
 class NodePath(BasePath):
     """
-    A list of nodes (from source to target) and the list of edge paths between
+    A list of Nodes (from source to target) and the list of EdgePaths between
     these two nodes
     """
+
+    log_prefix: str = __name__
 
     def __init__(
         self: NodePath, expand_edges: bool = True, path: List[Node] = []
     ) -> None:
         self.path: List[Node] = path
+        self.down_protecting: bool = False
+        self.link_protecting: bool = False
+        self.node_protecting: bool = False
         self.edge_paths: EdgePaths = EdgePaths()
         self.path_type: Type[Node] = Node
-        logging.debug(
-            f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
+        logger.log(
+            level=Settings.LOG_DEV_LEVEL,
+            msg=f"{NodePath.log_prefix}: Init'd {type(self)} @{hex(id(self))} with "
+            f"{len(self)} paths",
         )
 
         if expand_edges:
@@ -375,6 +392,24 @@ class NodePath(BasePath):
         """
         return self.get_lowest_path_weight()
 
+    def is_down_protecting(self: NodePath) -> bool:
+        """
+        Is this NodePath downstream path protecting
+        """
+        return self.down_protecting
+
+    def is_link_protecting(self: NodePath) -> bool:
+        """
+        Is this NodePath link protecting
+        """
+        return self.link_protecting
+
+    def is_node_protecting(self: NodePath) -> bool:
+        """
+        Is this NodePath node protecting
+        """
+        return self.node_protecting
+
     def no_edge_paths(self: NodePath) -> int:
         """
         The number of edge paths between the source and target node
@@ -382,6 +417,31 @@ class NodePath(BasePath):
         :rtype: int
         """
         return len(self.edge_paths)
+
+    def prepend(self: NodePath, node: Node) -> None:
+        """
+        Prepend a node to this NodePath
+        """
+        self.path = [node] + self.path
+        self.update_edge_paths()
+
+    def set_down_protecting(self: NodePath, protecting: bool) -> None:
+        """
+        Set this NodePath's downstream protecting state
+        """
+        self.down_protecting = protecting
+
+    def set_link_protecting(self: NodePath, protecting: bool) -> None:
+        """
+        Set this NodePath's is link protecting state
+        """
+        self.link_protecting = protecting
+
+    def set_node_protecting(self: NodePath, protecting: bool) -> None:
+        """
+        Set this NodePath's is node protecting state
+        """
+        self.node_protecting = protecting
 
     def set_source(self: NodePath, source: Node) -> None:
         """
@@ -410,11 +470,15 @@ class NodePaths(BasePaths):
     sorted in ascending weight order
     """
 
+    log_prefix: str = __name__
+
     def __init__(self: NodePaths, paths: List[NodePath] = []) -> None:
         self.paths: List[NodePath] = paths
 
-        logging.debug(
-            f"Init'd {type(self)} @{hex(id(self))} with {len(self)} paths"
+        logger.log(
+            level=Settings.LOG_DEV_LEVEL,
+            msg=f"{NodePaths.log_prefix}: Init'd {type(self)} @{hex(id(self))} "
+            f"with {len(self)} paths",
         )
 
     def append(self: NodePaths, path: NodePath) -> None:
@@ -495,7 +559,9 @@ class NodePaths(BasePaths):
             return self.paths[0].get_target()
         return None
 
-    def validate_endpoints(self: NodePaths, source: Node, target: Node) -> None:
+    def validate_endpoints(
+        self: NodePaths, source: Node, target: Node
+    ) -> None:
         """
         Confirm that the source and target nodes are the same as the source and
         target nodes which this NodePaths object represents paths between

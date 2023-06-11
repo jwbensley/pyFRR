@@ -3,8 +3,10 @@ import os
 
 from .settings import Settings
 
+logger = logging.getLogger(__name__)
 
-class Logger:
+
+class Logs:
     @staticmethod
     def setup() -> None:
         """
@@ -13,7 +15,18 @@ class Logger:
         :rtype: None
         """
         os.makedirs(os.path.dirname(Settings.LOG_DIR), exist_ok=True)
-        if Settings.DEBUG:
+        if Settings.DEV:
+            logging.basicConfig(
+                format=Settings.LOG_DEV,
+                level=Settings.LOG_DEV_LEVEL,
+                handlers=[
+                    logging.FileHandler(
+                        Settings.LOG_DIR, mode=Settings.LOG_MODE
+                    ),
+                    logging.StreamHandler(),
+                ],
+            )
+        elif Settings.DEBUG:
             logging.basicConfig(
                 format=Settings.LOG_DEBUG,
                 level=logging.DEBUG,
@@ -26,7 +39,7 @@ class Logger:
             )
         else:
             logging.basicConfig(
-                format=Settings.LOG_STANDARD,
+                format=Settings.LOG_INFO,
                 level=logging.INFO,
                 handlers=[
                     logging.FileHandler(
@@ -37,6 +50,6 @@ class Logger:
             )
 
         logging.info(
-            f"Starting logging to {Settings.LOG_DIR} at level "
+            f"Started logging to {Settings.LOG_DIR} at level "
             f"{logging.getLevelName(logging.getLogger().getEffectiveLevel())}"
         )

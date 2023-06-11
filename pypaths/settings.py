@@ -9,7 +9,10 @@ class Settings:
     #
 
     BASE_DIR: str = os.path.dirname(os.path.realpath(__file__))
+    # Run in debug mode, which is more verbose than normal
     DEBUG: bool = False
+    # Run in dev mode, a firehorse of information
+    DEV: bool = False
 
     #
     # LOGGING
@@ -19,11 +22,20 @@ class Settings:
     LOG_MODE: str = "a"
 
     # Standard logging format
-    LOG_STANDARD: str = "%(asctime)s|%(levelname)s|%(message)s"
+    LOG_INFO: str = "%(asctime)s|%(levelname)s|%(message)s"
 
     # Debugging logging formart
     LOG_DEBUG: str = (
         "%(asctime)s|%(levelname)s|%(process)d|%(funcName)s|%(message)s"
+    )
+
+    # Ded logging level
+    LOG_DEV_LEVEL: int = 5
+
+    # Dev logging format
+    LOG_DEV: str = (
+        "%(asctime)s|%(levelname)s|%(process)d|%(funcName)s|%(lineno)d|"
+        "%(message)s"
     )
 
     # Log file

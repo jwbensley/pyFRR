@@ -6,17 +6,28 @@ import typing
 from .all_paths import AllPaths
 from .topology import Topology
 
+logger = logging.getLogger(__name__)
 
-class Spf(AllPaths):
-    def __init__(self: Spf, all_paths: AllPaths, topology: Topology) -> None:
+
+class SpfPaths(AllPaths):
+    """
+    Calculate only the equal cost lowest weighted paths between nodes in a
+    topology
+    """
+
+    log_prefix: str = __name__
+
+    def __init__(
+        self: SpfPaths, all_paths: AllPaths, topology: Topology
+    ) -> None:
         self.all_paths: AllPaths = all_paths
         self.topology: Topology = topology
         self.calculate_paths()
 
-    def __len__(self: Spf) -> int:
+    def __len__(self: SpfPaths) -> int:
         """
-        Return the total number of lowest weight paths that have been found in
-        the topology.
+        Return the total number of lowest weighted paths that have been found
+        in the topology.
 
         :rtype: int
         """
@@ -26,7 +37,7 @@ class Spf(AllPaths):
                 count += len(self.paths[source][target])
         return count
 
-    def calculate_paths(self: Spf) -> None:
+    def calculate_paths(self: SpfPaths) -> None:
         """
         Filter all_paths for the node paths and edge paths between all nodes in
         the topology, which are the lowest weighted paths
@@ -43,4 +54,4 @@ class Spf(AllPaths):
                     source, target
                 ).get_lowest_weighted_paths()
 
-        logging.info(f"Calculated {len(self)} {type(self)} paths")
+        logger.info(f"{SpfPaths.log_prefix}: Calculated {len(self)} paths")

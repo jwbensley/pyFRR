@@ -313,15 +313,15 @@ class TestSpfPaths:
 
     def test_spf(self: TestSpfPaths, test_data: Dict) -> None:
         assert len(TestSpfPaths.pp.spf_paths) == test_data["no_paths"]
-        for src in TestSpfPaths.pp.topology.get_nodes():
-            for dst in TestSpfPaths.pp.topology.get_nodes():
-                if src == dst:
+        for source in TestSpfPaths.pp.topology.get_nodes():
+            for target in TestSpfPaths.pp.topology.get_nodes():
+                if source == target:
                     continue
                 paths: NodePaths = TestSpfPaths.pp.spf_paths.get_paths_between(
-                    src, dst
+                    source, target
                 )
                 path: NodePath
                 for path in paths:
                     assert [str(node) for node in path] in test_data["paths"][
-                        src.get_name()
-                    ][dst.get_name()]
+                        str(source)
+                    ][str(target)]
