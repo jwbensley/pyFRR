@@ -4,6 +4,7 @@ import logging
 from .all_paths import AllPaths
 from .lfa_paths import LfaPaths
 from .logs import Logs
+from .rlfa_paths import RlfaPaths
 from .spf_paths import SpfPaths
 from .topology import Topology
 
@@ -19,5 +20,8 @@ class PyPaths:
             all_paths=self.all_paths, topology=self.topology
         )
         self.lfa_paths: LfaPaths = LfaPaths(
+            spf_paths=self.spf_paths, topology=self.topology
+        )
+        self.rlfa_paths: RlfaPaths = RlfaPaths(
             spf_paths=self.spf_paths, topology=self.topology
         )

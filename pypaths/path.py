@@ -499,6 +499,16 @@ class NodePaths(BasePaths):
                     return
             self.paths.append(path)
 
+    def get_first_hop_nodes(self: NodePaths) -> List[Node]:
+        """
+        Return the list of first hop nodes across all best paths in this
+        NodePaths obj
+
+        :rtype: list
+        """
+
+        return [path[1] for path in self.get_lowest_weighted_paths()]
+
     def get_lowest_path_weight(self: NodePaths) -> int:
         """
         Return the weight of the lowest weighted NodePath in this NodePaths obj
@@ -522,15 +532,15 @@ class NodePaths(BasePaths):
 
         :rtype: NodePaths
         """
-        lowest_weight: int = Settings.HEIGHTEST_WEIGHT
-        paths: NodePaths = NodePaths(paths=[])
+        lowest_weight = Settings.HEIGHTEST_WEIGHT
+        paths = NodePaths(paths=[])
 
         if not self.paths:
             return paths
 
         path: NodePath
         for path in self.paths:
-            path_weight: int = path.get_lowest_path_weight()
+            path_weight = path.get_lowest_path_weight()
 
             if path_weight < lowest_weight:
                 lowest_weight = path_weight

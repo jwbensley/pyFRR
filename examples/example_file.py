@@ -69,18 +69,10 @@ def main():
         "LFA paths between PE1 and PE4:\n"
         f"{pp.lfa_paths.get_paths_between_by_name('PE1', 'PE4')}"
     )
-
-    for source in pp.topology.get_nodes():
-        print(f"\"{source}\": {{")
-        for target in pp.topology.get_nodes():
-            if source == target:
-                continue
-            print(f"    \"{target}\": [")
-            paths = pp.lfa_paths.get_paths_between(source, target)
-            for path in paths:
-                print(f"        {str(path).split(':')[1].strip()},")
-            print(f"    ],")
-        print("},")
+    print(
+        "rLFA paths between PE1 and PE4:\n"
+        f"{pp.rlfa_paths.get_paths_between_by_name('PE1', 'PE4')}"
+    )
 
 
 main()

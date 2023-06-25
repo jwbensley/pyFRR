@@ -4,6 +4,7 @@ import logging
 import typing
 
 from .all_paths import AllPaths
+from .path import Node
 from .topology import Topology
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class SpfPaths(AllPaths):
 
         :rtype: int
         """
-        count: int = 0
+        count = 0
         for source in self.paths:
             for target in self.paths[source]:
                 count += len(self.paths[source][target])
@@ -55,3 +56,18 @@ class SpfPaths(AllPaths):
                 ).get_lowest_weighted_paths()
 
         logger.info(f"{SpfPaths.log_prefix}: Calculated {len(self)} paths")
+
+    def get_path_cost_between(
+        self: SpfPaths, source: Node, target: Node
+    ) -> int:
+        """
+        Return the cost of the best path from a specific source to a specific
+        target
+
+        :param Node source: Source node in the topology
+        :param Node target: Target node in the topology
+        :rtype: int
+        """
+        if target not in self.paths[source]:
+            raise ValueError(f"Not paths between {source} and {target}")
+        return self.paths[source][target].get_lowest_path_weight()
