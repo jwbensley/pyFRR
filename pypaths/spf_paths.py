@@ -69,5 +69,5 @@ class SpfPaths(AllPaths):
         :rtype: int
         """
         if target not in self.paths[source]:
-            raise ValueError(f"Not paths between {source} and {target}")
+            raise ValueError(f"No paths between {source} and {target}")
         return self.paths[source][target].get_lowest_path_weight()

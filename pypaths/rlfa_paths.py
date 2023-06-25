@@ -65,7 +65,7 @@ class RlfaPaths(AllPaths):
         for pq in pq_nodes:
         """
 
-        link_rlfas = NodePaths(paths=[])
+        paths = NodePaths(paths=[])
         source_target_paths = self.spf_paths.get_paths_between(
             source=source, target=target
         )
@@ -83,6 +83,9 @@ class RlfaPaths(AllPaths):
             """
             if pq_node in source_target_first_hops:
                 continue
+
+            ######if pq_node == source:
+            ###########    continue
 
             """
             s_pq_paths = self.spf.gen_metric_paths(
@@ -162,13 +165,19 @@ class RlfaPaths(AllPaths):
             for source_pq_path in source_pq_paths:
                 for pq_target_path in pq_target_paths:
                     backup_path = NodePath(
-                        path=[source_pq_path + pq_target_path]
+                        path=(
+                            source_pq_path.get_nodes()[:-1]
+                            + pq_target_path.get_nodes()
+                        )
                     )
                     backup_path.set_link_protecting(True)
-                    link_rlfas.append(backup_path)
+                    paths.append(backup_path)
 
-        logger.debug(f"{self.log_prefix}: Link rLFA paths: {link_rlfas}")
-        return link_rlfas
+        logger.debug(
+            f"{self.log_prefix}: Link rLFA paths from {source} to {target}:\n"
+            f"{paths}"
+        )
+        return paths
 
     def calculate_nodepaths(
         self: RlfaPaths,
@@ -258,7 +267,7 @@ class RlfaPaths(AllPaths):
 
         return rlfas_node
         """
-        node_rlfas = NodePaths(paths=[])
+        paths = NodePaths(paths=[])
         source_target_paths = self.spf_paths.get_paths_between(
             source=source, target=target
         )
@@ -320,10 +329,13 @@ class RlfaPaths(AllPaths):
                             path=[source_pq_path + pq_target_path]
                         )
                         backup_path.set_link_protecting(True)
-                        node_rlfas.append(backup_path)
+                        paths.append(backup_path)
 
-        logger.debug(f"{self.log_prefix}: Node rLFA paths: {node_rlfas}")
-        return node_rlfas
+        logger.debug(
+            f"{self.log_prefix}: Link rLFA paths from {source} to {target}:\n"
+            f"{paths}"
+        )
+        return paths
 
     def calculate_paths(self: RlfaPaths) -> None:
         """
@@ -331,6 +343,25 @@ class RlfaPaths(AllPaths):
         which are rLFA paths.
 
         :rtype: None
+        """
+        self.paths = {}
+        for source in self.topology.get_nodes():
+            self.paths[source] = {}
+            for target in self.topology.get_nodes():
+                if source == target:
+                    continue
+                self.paths[source][target] = self.calculate_rlfa_paths(
+                    source=source,
+                    target=target,
+                )
+
+        logger.info(f"{self.log_prefix}: Calculated {len(self)} paths")
+
+    def calculate_rlfa_paths(
+        self: RlfaPaths, source: Node, target: Node
+    ) -> NodePaths:
+        """
+        Return a NodePaths obj of link and node protecting paths from source to targe
         """
 
         """
@@ -378,18 +409,29 @@ class RlfaPaths(AllPaths):
             print(f"rlfas_node: {rlfas_node}")
         """
 
-        self.paths = {}
-        for source in self.topology.get_nodes():
-            self.paths[source] = {}
-            for target in self.topology.get_nodes():
-                if source == target:
-                    continue
-                self.paths[source][target] = self.calculate_nodepaths(
-                    source=source,
-                    target=target,
-                )
+        if self.ep_space:
+            ep_space = self.gen_ep_space(source=source, target=target)
+        else:
+            p_space = self.gen_p_space(
+                root=source, source=source, target=target
+            )
 
-        logger.info(f"{self.log_prefix}: Calculated {len(self)} paths")
+        q_space = self.gen_q_space(source=source, target=target)
+
+        if self.ep_space:
+            pq_nodes = self.gen_pq_nodes(ep_space=ep_space, q_space=q_space)
+        else:
+            pq_nodes = self.gen_pq_nodes(ep_space=p_space, q_space=q_space)
+
+        rlfa_paths = self.calculate_linkpaths(
+            pq_nodes=pq_nodes, source=source, target=target
+        )
+        for path in self.calculate_nodepaths(
+            pq_nodes=pq_nodes, source=source, target=target
+        ):
+            rlfa_paths.append(path)
+
+        return rlfa_paths
 
     def gen_ep_space(
         self: RlfaPaths, source: Node, target: Node
@@ -487,6 +529,7 @@ class RlfaPaths(AllPaths):
                     )
                     ep_space.add(pnode)
 
+        logger.debug(f"{self.log_prefix}: EP-space for {source}:\n{ep_space}")
         return list(ep_space)
 
     def gen_p_space(
@@ -664,7 +707,7 @@ class RlfaPaths(AllPaths):
                 p_space.append(p)
             """
             if root_pnode_costs[pnode] < (
-                first_hop_cost + fh_pnode_costs[pnode]
+                first_hop_cost + min(fh_pnode_costs[pnode])
             ):
                 logger.debug(
                     f"{self.log_prefix}: P-space {pnode}: {root_pnode_costs[pnode]}"
@@ -672,7 +715,7 @@ class RlfaPaths(AllPaths):
                 )
                 p_space.append(pnode)
 
-        logger.debug(f"{self.log_prefix}: P-space for {root} is {p_space}")
+        logger.debug(f"{self.log_prefix}: P-space for {root}:\n{p_space}")
         return p_space
 
     def gen_pq_nodes(
@@ -698,7 +741,9 @@ class RlfaPaths(AllPaths):
         multiple exist, thus pq_nodes contians all nodes with the best cost
         to reach them (if multiple are tied).
         """
-        return [node for node in ep_space if node in q_space]
+        pq_nodes = [node for node in ep_space if node in q_space]
+        logger.debug(f"{self.log_prefix}: PQ-nodes:\n{pq_nodes}")
+        return pq_nodes
 
     def gen_q_space(self: RlfaPaths, source: Node, target: Node):
         """
@@ -771,4 +816,5 @@ class RlfaPaths(AllPaths):
                 )
                 q_space.append(node)
 
+        logger.debug(f"{self.log_prefix}: Q-space for {source}:\n{q_space}")
         return q_space

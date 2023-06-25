@@ -368,6 +368,15 @@ class NodePath(BasePath):
         """
         return self.edge_paths.get_lowest_path_weight()
 
+    def get_nodes(self: NodePath) -> List[Node]:
+        """
+        Return the list of Nodes in this Nodepath
+
+        :rtype: list
+        """
+
+        return self.path
+
     def get_source(self: NodePath) -> Node:
         """
         Get the first node in this node path
