@@ -25,19 +25,6 @@ class SpfPaths(AllPaths):
         self.topology: Topology = topology
         self.calculate_paths()
 
-    def __len__(self: SpfPaths) -> int:
-        """
-        Return the total number of lowest weighted paths that have been found
-        in the topology.
-
-        :rtype: int
-        """
-        count = 0
-        for source in self.paths:
-            for target in self.paths[source]:
-                count += len(self.paths[source][target])
-        return count
-
     def calculate_paths(self: SpfPaths) -> None:
         """
         Filter all_paths for the node paths and edge paths between all nodes in

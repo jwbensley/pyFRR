@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+import typing
 
 from .settings import Settings
 
@@ -30,7 +30,7 @@ class Edge:
         self.weight = weight
 
     def __str__(self: Edge) -> str:
-        attrs: Dict = {}
+        attrs: dict = {}
         if self.adj_sid:
             attrs["adj_sid"] = self.adj_sid
         if self.weight:
@@ -51,12 +51,12 @@ class Edge:
         )
 
     @staticmethod
-    def from_dict(nodes: Dict[str, Node], edge: Dict) -> Edge:
+    def from_dict(nodes: dict[str, Node], edge: dict) -> Edge:
         """
         Return an Edge obj from a dict
 
         :param Dict node_list: Dict of nodes the edge connects
-        :param Dict edge: A NetworkX syntax link object
+        :param Dict edge: An edge object serialised as a dict
         :rtype: Edge
         """
         return Edge(
@@ -82,13 +82,13 @@ class Edge:
         """
         self.local, self.remote = self.remote, self.local
 
-    def to_dict(self: Edge) -> Dict[str, Any]:
+    def to_dict(self: Edge) -> dict[str, any]:
         """
-        Return the Edge serialised as dictionary
+        Return the Edge serialised as a dictionary
 
         :rtype: Dict
         """
-        d: Dict = {
+        d: dict[str, any] = {
             "source": str(self.local),
             "target": str(self.remote),
         }
@@ -103,8 +103,8 @@ class Node:
     def __init__(
         self: Node,
         name: str,
-        edges: Dict[Node, List[Edge]] = {},
-        neighbours: List[Node] = [],
+        edges: dict[Node, list[Edge]] = {},
+        neighbours: list[Node] = [],
         node_sid: int | None = None,
     ) -> None:
         """
@@ -161,13 +161,13 @@ class Node:
         if neighbour not in self.neighbours:
             self.neighbours.append(neighbour)
 
-    def edges_to_list(self: Node) -> List:
+    def edges_to_list(self: Node) -> list[dict]:
         """
-        Return a JSON serializable list of edges
+        Return a list of edges serialised as dicts
 
         :rtype: list
         """
-        edges: List = []
+        edges: list[dict] = []
         node: Node
         for node in self.edges:
             edge: Edge
@@ -175,7 +175,7 @@ class Node:
                 edges.append(edge.to_dict())
         return edges
 
-    def edges_toward_node(self: Node, node: Node) -> List[Edge]:
+    def edges_toward_node(self: Node, node: Node) -> list[Edge]:
         """
         Return the list of edges towards 'node'
 
@@ -187,7 +187,7 @@ class Node:
         return []
 
     @staticmethod
-    def from_dict(node: Dict[str, Any]) -> Node:
+    def from_dict(node: dict[str, any]) -> Node:
         """
         Return a new Node obj from a dict
 
@@ -209,7 +209,7 @@ class Node:
         """
         return self.name
 
-    def get_neighbours(self: Node) -> List[Node]:
+    def get_neighbours(self: Node) -> list[Node]:
         """
         Return a list of neighbours
 
@@ -229,24 +229,24 @@ class Node:
             count += len(self.edges[node])
         return count
 
-    def node_to_dict(self: Node) -> Dict[str, Any]:
+    def node_to_dict(self: Node) -> dict[str, any]:
         """
         Return a JSON serializable dict of the node, without any edges
 
         :rtype: Dict
         """
-        d: Dict = {"id": self.name}
+        d: dict[str, any] = {"id": self.name}
         if self.node_sid:
             d["node_sid"] = self.node_sid
         return d
 
-    def to_dict(self: Node) -> Dict[str, Any]:
+    def to_dict(self: Node) -> dict[str, any]:
         """
-        Return a JSON serializable dict of the object
+        Return the Node obj serialised as a dict
 
         :rtype: Dict
         """
-        data: Dict = {
+        data: dict[str, any] = {
             "edges": self.edges_to_list(),
             "name": self.name,
         }

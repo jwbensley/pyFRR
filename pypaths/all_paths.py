@@ -12,15 +12,15 @@ logger = logging.getLogger(__name__)
 
 class AllPaths:
     """
-    Calculate all paths between nodes in a topology
+    This is the base class for all path groups.
+
+    Calculate all paths between nodes in a topology.
     """
 
     log_prefix: str = __name__
 
     class NoPathsFound(Exception):
-        """
-        No paths exists between source and target
-        """
+        """No paths exists between source and target."""
 
         def __init__(self: Exception, source: str, target: str):
             self.message: str = f"No paths exist between {source} and {target}"
@@ -41,9 +41,10 @@ class AllPaths:
         :rtype: int
         """
         count: int = 0
-        for source in self.paths:
-            for target in self.paths[source]:
-                count += len(self.paths[source][target])
+        for source in self.get_sources():
+            paths_from_source = self.get_paths_from(source)
+            for target in paths_from_source:
+                count += len(paths_from_source[target])
         return count
 
     def calculate_nodepaths(
@@ -55,6 +56,7 @@ class AllPaths:
     ) -> NodePaths:
         """
         Return a NodePaths list of simple paths from source to target.
+
         This is a recursive depth first search, all_paths and current_path
         are not meant to be the passed in the initial call.
 
@@ -90,46 +92,59 @@ class AllPaths:
     def calculate_paths(self: AllPaths) -> None:
         """
         Calculate all node paths and edge paths, between all nodes in the
-        topology
+        topology.
 
         :rtype: None
         """
-        self.paths = {}
-        for source in self.topology.get_nodes():
-            self.paths[source] = {}
-            for target in self.topology.get_nodes():
+        self.delete_paths()
+        for source in self.topology.get_nodes_list():
+            for target in self.topology.get_nodes_list():
                 if source == target:
                     continue
-                self.paths[source][target] = self.calculate_nodepaths(
-                    all_paths=NodePaths(paths=[]),
-                    current_path=NodePath(expand_edges=False, path=[]),
+                self.set_path(
+                    paths=self.calculate_nodepaths(
+                        all_paths=NodePaths(paths=[]),
+                        current_path=NodePath(expand_edges=False, path=[]),
+                        source=source,
+                        target=target,
+                    ),
                     source=source,
                     target=target,
                 )
 
         logger.info(f"{AllPaths.log_prefix}: Calculated {len(self)} paths")
 
+    def delete_paths(self: AllPaths) -> None:
+        """
+        Delete all paths.
+
+        :rtype: None
+        """
+        self.paths = {}
+
     def get_paths_between(
         self: AllPaths, source: Node, target: Node
     ) -> NodePaths:
         """
-        Return the NodePaths obj for node paths between the source and target
+        Return the NodePaths obj for node paths between the source and target.
 
         :param Node source: Source of the NodePaths obj to return
         :param Node target: Target of the NodePaths obj to return
         :rtype: NodePaths
         """
-        if target not in self.paths[source]:
+        if source not in self.get_sources():
             return NodePaths(paths=[])
-        if not self.paths[source][target]:
+
+        paths_to_target = self.get_paths_from(source)
+        if str(target) not in paths_to_target:
             return NodePaths(paths=[])
-        return self.paths[source][target]
+        return paths_to_target[target]
 
     def get_paths_between_by_name(
         self: AllPaths, source: str, target: str
     ) -> NodePaths:
         """
-        Return the NodePaths obj for node paths between the source and target
+        Return the NodePaths obj for node paths between the source and target.
 
         :param str source: Source of the NodePaths obj to return
         :param str target: Target of the NodePaths obj to return
@@ -138,3 +153,39 @@ class AllPaths:
         source_node: Node = self.topology.get_node_by_name(source)
         target_node: Node = self.topology.get_node_by_name(target)
         return self.get_paths_between(source_node, target_node)
+
+    def get_paths_from(self: AllPaths, source: Node) -> dict[str, NodePaths]:
+        """
+        Get all NodePaths from a specific source keyed by target node name.
+
+        :param Node source: Source node to return NodePaths for
+        :rtype: dict
+        """
+        if source not in self.get_sources():
+            return {}
+        return self.paths[source]
+
+    def get_sources(self: AllPaths) -> list[Node]:
+        """
+        Get the list of source nodes which have paths calculated.
+
+        :rtype: list
+        """
+
+        return list(self.paths.keys())
+
+    def set_path(
+        self: AllPaths, paths: NodePaths, source: Node, target: Node
+    ) -> None:
+        """
+        Set the paths between a source and target.
+
+        :param NodePaths paths: NodePaths obj to set
+        :param Node source: Source of the NodePaths obj
+        :param Node target: Destination of the NodePaths obj
+        :rtype: None
+        """
+
+        if source not in self.get_sources():
+            self.paths[source] = {}
+        self.paths[source][target] = paths

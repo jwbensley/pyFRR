@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from io import TextIOWrapper
-from typing import Any, Dict, List
+import typing
 
 from .node import Edge, Node
 
@@ -11,16 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 class Topology:
+    """
+    Class for storing all the Nodes objects in the topology
+    """
+
     log_prefix: str = __name__
-    nodes: Dict[str, Node]
-    topology_file: str
 
     def __init__(self: Topology) -> None:
-        self.nodes = {}
-        self.topology_file = ""
+        self.nodes: dict[str, Node] = {}
+        self.topology_file: str = ""
 
     def __str__(self: Topology) -> str:
-        data: Dict = {}
+        data: dict = {}
         for name in self.get_node_names():
             data[name] = self.nodes[name].to_dict()
         return json.dumps(data, indent=2)
@@ -32,49 +34,50 @@ class Topology:
         :param Node node: Node object to add
         :rtype: None
         """
-        if node.get_name() not in self.nodes:
+        if node not in self.get_nodes_list():
             self.nodes[node.get_name()] = node
 
     @staticmethod
-    def from_dict(topology: Dict[str, Any]) -> Topology:
+    def from_dict(topo_data: dict[str, any]) -> Topology:
         """
         Return a topology obj from a dict
 
-        :param dict topology: dict of nodes and links
+        :param Dict topo_data: Dict of nodes and links
         :rtype: Topology
         """
 
-        t = Topology()
+        topology = Topology()
 
         """
         Load all the node objects
         """
-        n: Dict
-        for n in topology["nodes"]:
-            t.nodes[n["id"]] = Node.from_dict(n)
+        node_data: dict
+        for node_data in topo_data["nodes"]:
+            topology.add_node(Node.from_dict(node_data))
 
         """
         Load all the edge objects
         """
-        e: Dict
-        for e in topology["links"]:
-            edge: Edge = Edge.from_dict(t.nodes, e)
-            if edge.local.get_name() not in t.nodes:
+        edge_data: dict
+        for edge_data in topo_data["links"]:
+            edge: Edge = Edge.from_dict(topology.get_nodes(), edge_data)
+            if edge.local not in topology.get_nodes_list():
                 logger.error(
                     f"{Topology.log_prefix}: Can't add link from {edge.local} "
                     f"to {edge.remote}, {edge.local} is not in topology"
                 )
-            elif edge.remote.get_name() not in t.nodes:
+            elif edge.remote not in topology.get_nodes_list():
                 logger.error(
                     f"{Topology.log_prefix}: Can't add link from {edge.local} "
                     f"to {edge.remote}, {edge.remote} is not in topology"
                 )
-            t.nodes[edge.local.get_name()].add_edge(edge)
+            edge.local.add_edge(edge)
 
         """
-        Add any missing edges which were only created in one direction
+        Add any missing edges, to ensure they exist beween nodes in both
+        directions
         """
-        for node in t.get_nodes():
+        for node in topology.get_nodes_list():
             for neighbour in node.get_neighbours():
                 if not node.edges_toward_node(neighbour):
                     for edge in neighbour.edges_toward_node(node):
@@ -83,10 +86,10 @@ class Topology:
                         node.add_edge(new_edge)
 
         logger.info(
-            f"{Topology.log_prefix}: Created topology with {t.no_of_nodes()} "
-            f"nodes and {t.no_of_edges()} edges"
+            f"{Topology.log_prefix}: Created topology with {topology.no_of_nodes()} "
+            f"nodes and {topology.no_of_edges()} edges"
         )
-        return t
+        return topology
 
     @staticmethod
     def from_json(json_data: str) -> Topology:
@@ -96,7 +99,7 @@ class Topology:
         :param str json: JSON string to parse
         :rtype: Topology
         """
-        topo_data: Dict
+        topo_data: dict
         try:
             topo_data = json.loads(json_data)
         except Exception as e:
@@ -129,22 +132,26 @@ class Topology:
             raise e
 
         json_file.close()
-        t: Topology = Topology.from_json(json_data)
-        t.topology_file = filename
-        return t
+        topology: Topology = Topology.from_json(json_data)
+        topology.topology_file = filename
+        return topology
 
-    def get_node_by_name(self: Topology, name: str) -> Node:
+    def get_node(self: Topology, node: str) -> Node:
         """
         Return the node object by name
 
-        :param str name: Name of the node obj to return
+        :param str node: Name of the node obj to return
+        :raises ValueError: If the node doesn't exist in the topology
+        :raises ValueError: If the node dict value is not set
         :rtype: Node
         """
-        if name in self.nodes:
-            return self.nodes[name]
-        raise ValueError(f"Node {name} not found")
+        if node not in self.get_node_names():
+            raise ValueError(f"Node {node} not found")
+        if not self.nodes[node]:
+            raise ValueError(f"Node is not defined")
+        return self.nodes[node]
 
-    def get_node_names(self: Topology) -> List[str]:
+    def get_node_names(self: Topology) -> list[str]:
         """
         Return the list of node names in the topology
 
@@ -152,9 +159,17 @@ class Topology:
         """
         return list(self.nodes.keys())
 
-    def get_nodes(self: Topology) -> List[Node]:
+    def get_nodes(self: Topology) -> dict[str, Node]:
         """
-        Return a list of all nodes in the topology
+        Return a dict of all Node objects in this topology, keyed by node name
+
+        :rtype: Dict
+        """
+        return self.nodes
+
+    def get_nodes_list(self: Topology) -> list[Node]:
+        """
+        Return a list of all Node objects in this topology
 
         :rtype: List
         """
@@ -167,8 +182,8 @@ class Topology:
         :rtype: int
         """
         count: int = 0
-        for node_name in self.nodes:
-            count += self.nodes[node_name].no_of_edges()
+        for node in self.get_node_names():
+            count += self.get_node(node).no_of_edges()
         return count
 
     def no_of_nodes(self: Topology) -> int:
@@ -177,33 +192,33 @@ class Topology:
 
         :rtype: int
         """
-        return len(self.nodes)
+        return len(self.get_nodes_list())
 
-    def node_list_from_str(self: Topology, node_path: List[str]) -> List[Node]:
+    def node_list_from_str(self: Topology, names: list[str]) -> list[Node]:
         """
-        Return a list of node in the topology, given a list of node names
+        Return a list of nodes in the topology, given a list of node names
 
-        :param List node_path: List of node names
+        :param List names: List of node names
         :rtype: List
         """
-        return [self.nodes[node] for node in node_path]
+        return [self.get_node(name) for name in names]
 
     @staticmethod
-    def to_dict(t: Topology) -> Dict[str, Any]:
+    def to_dict(topology: Topology) -> dict[str, any]:
         """
-        Return a JSON serialised dict of a topology, in NetworkX format
+        Return a Topology obj serialised as a dict
 
-        :param Topology t: Topology to serialised to dict
-        :rtype: dict
+        :param Topology topology: Topology to serialised to dict
+        :rtype: Dict
         """
-        topo_data: Dict = {
+        topo_data: dict[str, any] = {
             "directed": False,
             "multigraph": False,
             "nodes": [],
             "links": [],
         }
 
-        for node in t.get_nodes():
+        for node in topology.get_nodes_list():
             topo_data["nodes"].append(node.node_to_dict())
             topo_data["links"] += node.edges_to_list()
 
@@ -216,24 +231,26 @@ class Topology:
         return topo_data
 
     @staticmethod
-    def to_json(t: Topology) -> str:
+    def to_json(topology: Topology) -> str:
         """
         Return a JSON string serialisation of a topology
 
-        :param Topology t: Obj to serialise to JSON string
+        :param Topology topology: Obj to serialise to JSON string
         :rtype: Topology
         """
-        return json.dumps(Topology.to_dict(t), indent=4)
+        return json.dumps(Topology.to_dict(topology), indent=4)
 
-    def to_json_file(self: Topology, filename: str, t: Topology) -> None:
+    def to_json_file(
+        self: Topology, filename: str, topology: Topology
+    ) -> None:
         """
         Serialise a Topology to a file as a JSON string
 
         :param str Filename: Output filename path to write the JSON
-        :param Topology t: Topology object to serialise
+        :param Topology topology: Topology object to serialise
         :rtype: None
         """
-        json_data: str = Topology.to_json(t)
+        json_data: str = Topology.to_json(topology)
 
         json_file: TextIOWrapper
         try:

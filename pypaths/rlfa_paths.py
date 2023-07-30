@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List
+import typing
 
 from .all_paths import AllPaths
 from .spf_paths import SpfPaths
@@ -34,7 +34,7 @@ class RlfaPaths(AllPaths):
         self.calculate_paths()
 
     def calculate_linkpaths(
-        self: RlfaPaths, pq_nodes: List[Node], source: Node, target: Node
+        self: RlfaPaths, pq_nodes: list[Node], source: Node, target: Node
     ) -> NodePaths:
         """
         Return all link protecting rLFA paths from source to target.
@@ -181,7 +181,7 @@ class RlfaPaths(AllPaths):
 
     def calculate_nodepaths(
         self: RlfaPaths,
-        pq_nodes: List[Node],
+        pq_nodes: list[Node],
         source: Node,
         target: Node,
     ) -> NodePaths:
@@ -435,7 +435,7 @@ class RlfaPaths(AllPaths):
 
     def gen_ep_space(
         self: RlfaPaths, source: Node, target: Node
-    ) -> List[Node]:
+    ) -> list[Node]:
         """
         Return a list of nodes in source's Extended P-space.
 
@@ -537,7 +537,7 @@ class RlfaPaths(AllPaths):
         root: Node,
         source: Node,
         target: Node,
-    ) -> List[Node]:
+    ) -> list[Node]:
         """
         Return a list of nodes in root's P-space relevant to the first-hop
         link(s) from source to target.
@@ -566,7 +566,7 @@ class RlfaPaths(AllPaths):
         cost S->E->P.
         """
 
-        p_space: List[Node] = []
+        p_space: list[Node] = []
 
         """
         Find the cost of the lowest cost first-hop from all the best paths
@@ -719,8 +719,8 @@ class RlfaPaths(AllPaths):
         return p_space
 
     def gen_pq_nodes(
-        self: RlfaPaths, ep_space: List[Node], q_space: List[Node]
-    ) -> List[Node]:
+        self: RlfaPaths, ep_space: list[Node], q_space: list[Node]
+    ) -> list[Node]:
         """
         Return a list of PQ-Nodes.
 
@@ -793,7 +793,7 @@ class RlfaPaths(AllPaths):
                 q_space.append(node)
         """
 
-        q_space: List[Node] = []
+        q_space: list[Node] = []
         source_target_cost = self.spf_paths.get_path_cost_between(
             source=source, target=target
         )

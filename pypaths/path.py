@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterator, List, Type, TypeVar, Union
+from typing import Iterator, Type, TypeVar, Union
 
 from .node import Edge, Node
 from .settings import Settings
@@ -18,8 +18,8 @@ class BasePath:
     Base class for *Path objects
     """
 
-    def __init__(self: BASE_PATH, path: List = []) -> None:
-        self.path: List = path
+    def __init__(self: BASE_PATH, path: list = []) -> None:
+        self.path: list = path
         self.path_type: Type
 
     def __contains__(self: BASE_PATH, item: BASE_TYPE) -> bool:
@@ -105,8 +105,8 @@ class BasePaths:
     class ErrorNoPathsDefined(Exception):
         pass
 
-    def __init__(self: BASE_PATHS, paths: List = []) -> None:
-        self.paths: List = paths
+    def __init__(self: BASE_PATHS, paths: list = []) -> None:
+        self.paths: list = paths
 
     def __getitem__(self: BASE_PATHS, index: int) -> Union[NodePath, EdgePath]:
         """
@@ -155,8 +155,8 @@ class EdgePath(BasePath):
 
     log_prefix: str = __name__
 
-    def __init__(self: EdgePath, path: List[Edge] = []) -> None:
-        self.path: List[Edge] = path
+    def __init__(self: EdgePath, path: list[Edge] = []) -> None:
+        self.path: list[Edge] = path
         self.path_type: Type[Edge] = Edge
         logger.log(
             level=Settings.LOG_DEV_LEVEL,
@@ -209,8 +209,8 @@ class EdgePaths(BasePaths):
 
     log_prefix: str = __name__
 
-    def __init__(self: EdgePaths, paths: List[EdgePath] = []) -> None:
-        self.paths: List[EdgePath] = paths
+    def __init__(self: EdgePaths, paths: list[EdgePath] = []) -> None:
+        self.paths: list[EdgePath] = paths
 
         for path in paths:
             self.append(path)
@@ -326,9 +326,9 @@ class NodePath(BasePath):
     log_prefix: str = __name__
 
     def __init__(
-        self: NodePath, expand_edges: bool = True, path: List[Node] = []
+        self: NodePath, expand_edges: bool = True, path: list[Node] = []
     ) -> None:
-        self.path: List[Node] = path
+        self.path: list[Node] = path
         self.down_protecting: bool = False
         self.link_protecting: bool = False
         self.node_protecting: bool = False
@@ -352,7 +352,7 @@ class NodePath(BasePath):
         """
         return self.path[index]
 
-    def get_edges(self: NodePath, i: int) -> List[Edge]:
+    def get_edges(self: NodePath, i: int) -> list[Edge]:
         """
         Return the list of edges at the given index in the node path
 
@@ -368,7 +368,7 @@ class NodePath(BasePath):
         """
         return self.edge_paths.get_lowest_path_weight()
 
-    def get_nodes(self: NodePath) -> List[Node]:
+    def get_nodes(self: NodePath) -> list[Node]:
         """
         Return the list of Nodes in this Nodepath
 
@@ -481,8 +481,8 @@ class NodePaths(BasePaths):
 
     log_prefix: str = __name__
 
-    def __init__(self: NodePaths, paths: List[NodePath] = []) -> None:
-        self.paths: List[NodePath] = paths
+    def __init__(self: NodePaths, paths: list[NodePath] = []) -> None:
+        self.paths: list[NodePath] = paths
 
         logger.log(
             level=Settings.LOG_DEV_LEVEL,
@@ -508,7 +508,7 @@ class NodePaths(BasePaths):
                     return
             self.paths.append(path)
 
-    def get_first_hop_nodes(self: NodePaths) -> List[Node]:
+    def get_first_hop_nodes(self: NodePaths) -> list[Node]:
         """
         Return the list of first hop nodes across all best paths in this
         NodePaths obj
