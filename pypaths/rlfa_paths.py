@@ -146,7 +146,6 @@ class RlfaPaths(AllPaths):
                     for source_pq_hop in source_pq_path[:-1]:
                         pq_target_path: NodePath
                         for pq_target_path in pq_target_paths:
-                            source_pq_hop: Node
                             if source_pq_hop in pq_target_path[1:]:
                                 logger.debug(
                                     f"{self.log_prefix}: Skipping trombone "
@@ -179,11 +178,11 @@ class RlfaPaths(AllPaths):
         )
         return paths
 
-    def calculate_nodepaths(
+    def calculate_nodepaths(  # type: ignore[override]
         self: RlfaPaths,
-        pq_nodes: list[Node],
         source: Node,
         target: Node,
+        pq_nodes: list[Node],
     ) -> NodePaths:
         """
         Return NodePaths of rLFA paths between the source and target
@@ -307,7 +306,6 @@ class RlfaPaths(AllPaths):
                         for source_pq_hop in source_pq_path[:-1]:
                             pq_target_path: NodePath
                             for pq_target_path in pq_target_paths:
-                                source_pq_hop: Node
                                 if source_pq_hop in pq_target_path[1:]:
                                     logger.debug(
                                         f"{self.log_prefix}: Skipping trombone "
@@ -325,9 +323,7 @@ class RlfaPaths(AllPaths):
 
                 for source_pq_path in source_pq_paths:
                     for pq_target_path in pq_target_paths:
-                        backup_path = NodePath(
-                            path=[source_pq_path + pq_target_path]
-                        )
+                        backup_path = source_pq_path + pq_target_path
                         backup_path.set_link_protecting(True)
                         paths.append(backup_path)
 
@@ -345,9 +341,9 @@ class RlfaPaths(AllPaths):
         :rtype: None
         """
         self.paths = {}
-        for source in self.topology.get_nodes():
+        for source in self.topology.get_nodes_list():
             self.paths[source] = {}
-            for target in self.topology.get_nodes():
+            for target in self.topology.get_nodes_list():
                 if source == target:
                     continue
                 self.paths[source][target] = self.calculate_rlfa_paths(
@@ -427,7 +423,9 @@ class RlfaPaths(AllPaths):
             pq_nodes=pq_nodes, source=source, target=target
         )
         for path in self.calculate_nodepaths(
-            pq_nodes=pq_nodes, source=source, target=target
+            source=source,
+            target=target,
+            pq_nodes=pq_nodes,
         ):
             rlfa_paths.append(path)
 
@@ -495,7 +493,7 @@ class RlfaPaths(AllPaths):
                         ep_space.append(p)
         """
 
-        ep_space: set[None] = set()
+        ep_space: set[Node] = set()
         for nei in source.get_neighbours():
             if nei == target:
                 continue
@@ -603,8 +601,8 @@ class RlfaPaths(AllPaths):
         first_hop_nodes = root_target_paths.get_first_hop_nodes()
 
         root_pnode_costs = {}
-        fh_pnode_costs = {}
-        for pnode in self.topology.get_nodes():
+        fh_pnode_costs: dict[Node, list] = {}
+        for pnode in self.topology.get_nodes_list():
             if pnode == root or pnode == target:
                 continue
 
@@ -745,7 +743,7 @@ class RlfaPaths(AllPaths):
         logger.debug(f"{self.log_prefix}: PQ-nodes:\n{pq_nodes}")
         return pq_nodes
 
-    def gen_q_space(self: RlfaPaths, source: Node, target: Node):
+    def gen_q_space(self: RlfaPaths, source: Node, target: Node) -> list:
         """
         Return a list of nodes in targets's Q-space.
 
@@ -798,7 +796,7 @@ class RlfaPaths(AllPaths):
             source=source, target=target
         )
 
-        for node in self.topology.get_nodes():
+        for node in self.topology.get_nodes_list():
             if node == source or node == target:
                 continue
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterator, Type, TypeVar, Union
+from typing import Iterator, overload, Type, TypeVar, Union
 
 from .node import Edge, Node
 from .settings import Settings
@@ -21,6 +21,9 @@ class BasePath:
     def __init__(self: BASE_PATH, path: list = []) -> None:
         self.path: list = path
         self.path_type: Type
+
+    def __add__(self: BASE_PATH, other: BASE_PATH) -> BASE_PATH:
+        return self.__class__(path=[self.path + other.path])
 
     def __contains__(self: BASE_PATH, item: BASE_TYPE) -> bool:
         return item in self.path
@@ -77,25 +80,6 @@ class BasePath:
         """
         return self.path.pop(i)
 
-    def slice(
-        self: BASE_PATH,
-        start: int = 0,
-        stop: int | None = None,
-        step: int = 1,
-    ) -> BASE_PATH:
-        """
-        Seperate this from __getitem__ due to the type hinting mess it creates
-        when __getitem__ has to return a slice or a single item
-
-        Currently if you slice a NodePath, all the edges need to be recalculated
-        instead of being copied from the selected node onwards.
-        FIXME / TODO
-
-        :param slice index: Index range to slice from/to with step size
-        :rtype: BASE_PATH
-        """
-        return self.__class__(path=self.path[start:stop:step])
-
 
 class BasePaths:
     """
@@ -107,12 +91,6 @@ class BasePaths:
 
     def __init__(self: BASE_PATHS, paths: list = []) -> None:
         self.paths: list = paths
-
-    def __getitem__(self: BASE_PATHS, index: int) -> Union[NodePath, EdgePath]:
-        """
-        Support for slicing is in slice()
-        """
-        return self.paths[index]
 
     def __iter__(self: BASE_PATHS) -> Iterator:
         return self.paths.__iter__()
@@ -132,21 +110,6 @@ class BasePaths:
             s += f"{path}\n"
         return s
 
-    def slice(
-        self: BASE_PATHS,
-        start: int = 0,
-        stop: int | None = None,
-        step: int = 1,
-    ) -> BASE_PATHS:
-        """
-        Seperate this from __getitem__ due to the type hinting mess it creates
-        when __getitem__ has to return a slice or a single item
-
-        :param slice index: Index range to slice from/to with step size
-        :rtype: BASE_PATHS
-        """
-        return self.__class__(paths=self.paths[start:stop:step])
-
 
 class EdgePath(BasePath):
     """
@@ -164,14 +127,29 @@ class EdgePath(BasePath):
             f"with path len {len(self)}",
         )
 
+    @overload
     def __getitem__(self: EdgePath, index: int) -> Edge:
-        """
-        Support for slicing is in slice()
+        ...
 
-        :param int index: Index in path to return
-        :rtype: Edge
+    @overload
+    def __getitem__(self: EdgePath, index: slice) -> EdgePath:
+        ...
+
+    def __getitem__(self: EdgePath, index: int | slice) -> Edge | EdgePath:
         """
-        return self.path[index]
+
+        :param int index: Edge index in path to return
+        :param slice index: start/stop/step values to return a list of edges
+        :rtype: Edge | EdgePath
+        """
+        if isinstance(index, int):
+            return self.path[index]
+        elif isinstance(index, slice):
+            return self.__class__(
+                path=self.path[index.start : index.stop : index.step]
+            )
+        else:
+            raise TypeError(f"arg must be int or slice, not {type(index)}")
 
     def get_source(self: EdgePath) -> Node:
         """
@@ -221,6 +199,32 @@ class EdgePaths(BasePaths):
             f"with {len(self)} paths",
         )
 
+    @overload
+    def __getitem__(self: EdgePaths, index: int) -> EdgePath:
+        ...
+
+    @overload
+    def __getitem__(self: EdgePaths, index: slice) -> EdgePaths:
+        ...
+
+    def __getitem__(
+        self: EdgePaths, index: int | slice
+    ) -> EdgePath | EdgePaths:
+        """
+
+        :param int index: Path index in paths to return
+        :param slice index: start/stop/step values to return a list of paths
+        :rtype: EdgePath | EdgePaths
+        """
+        if isinstance(index, int):
+            return self.paths[index]
+        elif isinstance(index, slice):
+            return self.__class__(
+                paths=self.paths[index.start : index.stop : index.step]
+            )
+        else:
+            raise TypeError(f"arg must be int or slice, not {type(index)}")
+
     def append(self: EdgePaths, path: EdgePath) -> None:
         """
         Add the new edge path in ascending weight order
@@ -257,7 +261,7 @@ class EdgePaths(BasePaths):
             if not EdgePaths.expand_node_path(
                 all_edge_paths=all_edge_paths,
                 edge_path=edge_path,
-                node_path=node_path.slice(1),
+                node_path=node_path[1:],
             ):
                 all_edge_paths.append(edge_path.copy())
                 edge_path.pop()
@@ -343,14 +347,29 @@ class NodePath(BasePath):
         if expand_edges:
             self.update_edge_paths()
 
+    @overload
     def __getitem__(self: NodePath, index: int) -> Node:
-        """
-        Support for slicing is in slice()
+        ...
 
-        :param int index: Index in path to return
-        :rtype: Node
+    @overload
+    def __getitem__(self: NodePath, index: slice) -> NodePath:
+        ...
+
+    def __getitem__(self: NodePath, index: int | slice) -> Node | NodePath:
         """
-        return self.path[index]
+
+        :param int index: Node index in path to return
+        :param slice index: start/stop/step values to return a list of nodes
+        :rtype: Node | NodePath
+        """
+        if isinstance(index, int):
+            return self.path[index]
+        elif isinstance(index, slice):
+            return self.__class__(
+                path=self.path[index.start : index.stop : index.step]
+            )
+        else:
+            raise TypeError(f"arg must be int or slice, not {type(index)}")
 
     def get_edges(self: NodePath, i: int) -> list[Edge]:
         """
@@ -474,7 +493,7 @@ class NodePath(BasePath):
 
 
 class NodePaths(BasePaths):
-    """
+    """NodePath
     A list of NodePath's between the same source and target,
     sorted in ascending weight order
     """
@@ -489,6 +508,32 @@ class NodePaths(BasePaths):
             msg=f"{NodePaths.log_prefix}: Init'd {type(self)} @{hex(id(self))} "
             f"with {len(self)} paths",
         )
+
+    @overload
+    def __getitem__(self: NodePaths, index: int) -> NodePath:
+        ...
+
+    @overload
+    def __getitem__(self: NodePaths, index: slice) -> NodePaths:
+        ...
+
+    def __getitem__(
+        self: NodePaths, index: int | slice
+    ) -> NodePath | NodePaths:
+        """
+
+        :param int index: Path index in paths to return
+        :param slice index: start/stop/step values to return a list of paths
+        :rtype: NodePath | NodePaths
+        """
+        if isinstance(index, int):
+            return self.paths[index]
+        elif isinstance(index, slice):
+            return self.__class__(
+                paths=self.paths[index.start : index.stop : index.step]
+            )
+        else:
+            raise TypeError(f"arg must be int or slice, not {type(index)}")
 
     def append(self: NodePaths, path: NodePath) -> None:
         """

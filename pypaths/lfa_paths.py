@@ -27,7 +27,7 @@ class LfaPaths(AllPaths):
         self.topology: Topology = topology
         self.calculate_paths()
 
-    def calculate_nodepaths(
+    def calculate_nodepaths(  # type: ignore[override]
         self: LfaPaths,
         source: Node,
         target: Node,
@@ -77,7 +77,7 @@ class LfaPaths(AllPaths):
             check the cost of the first best path of source against the first
             best path of nei.
             """
-            any_best_path: NodePath = source_target_paths[0]
+            any_best_path = source_target_paths[0]
             nh = any_best_path[1]
 
             if (
@@ -261,9 +261,9 @@ class LfaPaths(AllPaths):
         :rtype: None
         """
         self.paths = {}
-        for source in self.topology.get_nodes():
+        for source in self.topology.get_nodes_list():
             self.paths[source] = {}
-            for target in self.topology.get_nodes():
+            for target in self.topology.get_nodes_list():
                 if source == target:
                     continue
                 self.paths[source][target] = self.calculate_nodepaths(

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from io import TextIOWrapper
-import typing
+from typing import Union
 
 from .node import Edge, Node
 
@@ -38,7 +38,7 @@ class Topology:
             self.nodes[node.get_name()] = node
 
     @staticmethod
-    def from_dict(topo_data: dict[str, any]) -> Topology:
+    def from_dict(topo_data: dict[str, dict]) -> Topology:
         """
         Return a topology obj from a dict
 
@@ -204,28 +204,30 @@ class Topology:
         return [self.get_node(name) for name in names]
 
     @staticmethod
-    def to_dict(topology: Topology) -> dict[str, any]:
+    def to_dict(topology: Topology) -> dict[str, Union[bool, list]]:
         """
         Return a Topology obj serialised as a dict
 
         :param Topology topology: Topology to serialised to dict
         :rtype: Dict
         """
-        topo_data: dict[str, any] = {
+        nodes = []
+        links = []
+        for node in topology.get_nodes_list():
+            nodes.append(node.to_dict(inc_edges=False))
+            links += node.edges_to_list()
+
+        topo_data: dict[str, Union[bool, list]] = {
             "directed": False,
             "multigraph": False,
-            "nodes": [],
-            "links": [],
+            "nodes": nodes,
+            "links": links,
         }
-
-        for node in topology.get_nodes_list():
-            topo_data["nodes"].append(node.node_to_dict())
-            topo_data["links"] += node.edges_to_list()
 
         logger.debug(
             f"{Topology.log_prefix}: Created dict with "
-            f"{len(topo_data['nodes'])} nodes and "
-            f"{len(topo_data['links'])} edges"
+            f"{len(nodes)} nodes and "
+            f"{len(links)} edges"
         )
 
         return topo_data

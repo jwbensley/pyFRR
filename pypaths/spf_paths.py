@@ -33,9 +33,9 @@ class SpfPaths(AllPaths):
         :rtype: None
         """
         self.paths = {}
-        for source in self.topology.get_nodes():
+        for source in self.topology.get_nodes_list():
             self.paths[source] = {}
-            for target in self.topology.get_nodes():
+            for target in self.topology.get_nodes_list():
                 if source == target:
                     continue
                 self.paths[source][target] = self.all_paths.get_paths_between(

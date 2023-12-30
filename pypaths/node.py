@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing
+from typing import Union
 
 from .settings import Settings
 
@@ -82,13 +82,13 @@ class Edge:
         """
         self.local, self.remote = self.remote, self.local
 
-    def to_dict(self: Edge) -> dict[str, any]:
+    def to_dict(self: Edge) -> dict[str, Union[str, int]]:
         """
         Return the Edge serialised as a dictionary
 
         :rtype: Dict
         """
-        d: dict[str, any] = {
+        d: dict[str, Union[str, int]] = {
             "source": str(self.local),
             "target": str(self.remote),
         }
@@ -187,18 +187,20 @@ class Node:
         return []
 
     @staticmethod
-    def from_dict(node: dict[str, any]) -> Node:
+    def from_dict(node: dict[str, Union[str, int]]) -> Node:
         """
         Return a new Node obj from a dict
 
         :param Dict nx_node: Node obj serialised as dict in networkx format
         :rtype: Node
         """
+        node_sid = int(node["node_sid"]) if "node_sid" in node else None
+
         return Node(
             edges={},
-            name=node["id"],
+            name=str(node["id"]),
             neighbours=[],
-            node_sid=node["node_sid"] if "node_sid" in node else None,
+            node_sid=node_sid,
         )
 
     def get_name(self: Node) -> str:
@@ -229,25 +231,19 @@ class Node:
             count += len(self.edges[node])
         return count
 
-    def node_to_dict(self: Node) -> dict[str, any]:
-        """
-        Return a JSON serializable dict of the node, without any edges
-
-        :rtype: Dict
-        """
-        d: dict[str, any] = {"id": self.name}
-        if self.node_sid:
-            d["node_sid"] = self.node_sid
-        return d
-
-    def to_dict(self: Node) -> dict[str, any]:
+    def to_dict(
+        self: Node, inc_edges: bool = True
+    ) -> dict[str, Union[str, list, int]]:
         """
         Return the Node obj serialised as a dict
 
+        :param bool inc_edges: Include edges (they are not JSON serialisable)
         :rtype: Dict
         """
-        data: dict[str, any] = {
-            "edges": self.edges_to_list(),
+        edges = self.edges_to_list() if inc_edges else []
+        data: dict[str, Union[str, list, int]] = {
+            "edges": edges,
             "name": self.name,
+            "node_side": self.node_sid,
         }
         return data

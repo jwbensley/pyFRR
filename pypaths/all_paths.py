@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict
+import typing
 
 from .node import Node
 from .path import NodePath, NodePaths
@@ -22,14 +22,14 @@ class AllPaths:
     class NoPathsFound(Exception):
         """No paths exists between source and target."""
 
-        def __init__(self: Exception, source: str, target: str):
+        def __init__(self: AllPaths.NoPathsFound, source: str, target: str):
             self.message: str = f"No paths exist between {source} and {target}"
 
-        def __str__(self):
+        def __str__(self: AllPaths.NoPathsFound) -> str:
             return repr(self.message)
 
     def __init__(self: AllPaths, topology: Topology) -> None:
-        self.paths: Dict[Node, Dict[Node, NodePaths]] = {}
+        self.paths: dict[Node, dict[Node, NodePaths]] = {}
         self.topology: Topology = topology
         self.calculate_paths()
 
@@ -70,12 +70,11 @@ class AllPaths:
         if not current_path:
             current_path.set_source(source)
 
-        neighbour: Node
-        for neighbour in [
-            n
-            for n in current_path[-1].get_neighbours()
-            if n not in current_path
-        ]:
+        penultimate_node: Node = current_path[-1]
+        for neighbour in penultimate_node.get_neighbours():
+            if neighbour in current_path:
+                continue
+
             current_path.append(neighbour)
 
             if neighbour == target:
@@ -135,10 +134,10 @@ class AllPaths:
         if source not in self.get_sources():
             return NodePaths(paths=[])
 
-        paths_to_target = self.get_paths_from(source)
-        if str(target) not in paths_to_target:
+        paths_from_source = self.get_paths_from(source)
+        if target not in paths_from_source:
             return NodePaths(paths=[])
-        return paths_to_target[target]
+        return paths_from_source[target]
 
     def get_paths_between_by_name(
         self: AllPaths, source: str, target: str
@@ -150,11 +149,11 @@ class AllPaths:
         :param str target: Target of the NodePaths obj to return
         :rtype: NodePaths
         """
-        source_node: Node = self.topology.get_node_by_name(source)
-        target_node: Node = self.topology.get_node_by_name(target)
+        source_node: Node = self.topology.get_node(source)
+        target_node: Node = self.topology.get_node(target)
         return self.get_paths_between(source_node, target_node)
 
-    def get_paths_from(self: AllPaths, source: Node) -> dict[str, NodePaths]:
+    def get_paths_from(self: AllPaths, source: Node) -> dict[Node, NodePaths]:
         """
         Get all NodePaths from a specific source keyed by target node name.
 
