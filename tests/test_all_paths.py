@@ -781,8 +781,8 @@ class TestAllPaths:
 
     def test_all_paths(self: TestAllPaths, test_data: Dict) -> None:
         assert len(TestAllPaths.pp.all_paths) == test_data["no_paths"]
-        for source in TestAllPaths.pp.topology.get_nodes():
-            for target in TestAllPaths.pp.topology.get_nodes():
+        for source in TestAllPaths.pp.topology.get_nodes_list():
+            for target in TestAllPaths.pp.topology.get_nodes_list():
                 if source == target:
                     continue
                 paths: NodePaths = TestAllPaths.pp.all_paths.get_paths_between(

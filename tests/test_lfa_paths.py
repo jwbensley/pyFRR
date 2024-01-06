@@ -211,8 +211,8 @@ class TestLfaPaths:
 
     def test_spf(self: TestLfaPaths, test_data: Dict) -> None:
         assert len(TestLfaPaths.pp.lfa_paths) == test_data["no_paths"]
-        for source in TestLfaPaths.pp.topology.get_nodes():
-            for target in TestLfaPaths.pp.topology.get_nodes():
+        for source in TestLfaPaths.pp.topology.get_nodes_list():
+            for target in TestLfaPaths.pp.topology.get_nodes_list():
                 if source == target:
                     continue
                 paths: NodePaths = TestLfaPaths.pp.lfa_paths.get_paths_between(
