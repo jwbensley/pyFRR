@@ -6,6 +6,7 @@ from io import TextIOWrapper
 from typing import Union
 
 from .node import Edge, Node
+from .settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,21 @@ class Topology:
         for name in self.get_node_names():
             data[name] = self.nodes[name].to_dict()
         return json.dumps(data, indent=2)
+
+    def _log(self: Topology, level: str, msg: str) -> None:
+        """
+        Issue a log message with this classes specific log prefix
+        """
+        match level:
+            case Settings.LOG_INFO:
+                logger.info(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEBUG:
+                logger.debug(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEV:
+                logger.log(
+                    level=Settings.LOG_DEV_LEVEL,
+                    msg=f"{self.log_prefix}: {msg}",
+                )
 
     def add_node(self: Topology, node: Node) -> None:
         """
@@ -86,8 +102,8 @@ class Topology:
                         node.add_edge(new_edge)
 
         logger.info(
-            f"{Topology.log_prefix}: Created topology with {topology.no_of_nodes()} "
-            f"nodes and {topology.no_of_edges()} edges"
+            msg=f"{Topology.log_prefix}: Created topology with {topology.no_of_nodes()} "
+            f"nodes and {topology.no_of_edges()} edges",
         )
         return topology
 
@@ -242,9 +258,7 @@ class Topology:
         """
         return json.dumps(Topology.to_dict(topology), indent=4)
 
-    def to_json_file(
-        self: Topology, filename: str, topology: Topology
-    ) -> None:
+    def to_json_file(self: Topology, filename: str, topology: Topology) -> None:
         """
         Serialise a Topology to a file as a JSON string
 

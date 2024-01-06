@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 from .all_paths import AllPaths
 from .lfa_paths import LfaPaths
 from .logs import Logs

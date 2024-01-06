@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterator, overload, Type, TypeVar, Union
+from typing import Iterator, Type, TypeVar, Union, overload
 
 from .node import Edge, Node
 from .settings import Settings
@@ -17,6 +17,8 @@ class BasePath:
     """
     Base class for *Path objects
     """
+
+    log_prefix: str = __name__
 
     def __init__(self: BASE_PATH, path: list = []) -> None:
         self.path: list = path
@@ -37,6 +39,9 @@ class BasePath:
     def __nonzero__(self: BASE_PATH) -> bool:
         return bool(self.path)
 
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def __str__(self: BASE_PATH) -> str:
         if not self.path:
             return ""
@@ -44,6 +49,21 @@ class BasePath:
         return (
             f"Weight {self.get_weight()}: {[str(item) for item in self.path]}"
         )
+
+    def _log(self: BASE_PATH, level: str, msg: str) -> None:
+        """
+        Issue a log message with this classes specific log prefix
+        """
+        match level:
+            case Settings.LOG_INFO:
+                logger.info(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEBUG:
+                logger.debug(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEV:
+                logger.log(
+                    level=Settings.LOG_DEV_LEVEL,
+                    msg=f"{self.log_prefix}: {msg}",
+                )
 
     def append(self: BASE_PATH, item: BASE_TYPE) -> None:
         """
@@ -86,6 +106,8 @@ class BasePaths:
     Base class for *Paths objects
     """
 
+    log_prefix: str = __name__
+
     class ErrorNoPathsDefined(Exception):
         pass
 
@@ -110,6 +132,21 @@ class BasePaths:
             s += f"{path}\n"
         return s
 
+    def _log(self: BASE_PATHS, level: str, msg: str) -> None:
+        """
+        Issue a log message with this classes specific log prefix
+        """
+        match level:
+            case Settings.LOG_INFO:
+                logger.info(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEBUG:
+                logger.debug(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEV:
+                logger.log(
+                    level=Settings.LOG_DEV_LEVEL,
+                    msg=f"{self.log_prefix}: {msg}",
+                )
+
 
 class EdgePath(BasePath):
     """
@@ -121,9 +158,9 @@ class EdgePath(BasePath):
     def __init__(self: EdgePath, path: list[Edge] = []) -> None:
         self.path: list[Edge] = path
         self.path_type: Type[Edge] = Edge
-        logger.log(
-            level=Settings.LOG_DEV_LEVEL,
-            msg=f"{EdgePath.log_prefix}: Init'd {self.__class__} @{hex(id(self))} "
+        self._log(
+            level=Settings.LOG_DEV,
+            msg=f"Init'd {self.__class__} @{hex(id(self))} "
             f"with path len {len(self)}",
         )
 
@@ -193,9 +230,9 @@ class EdgePaths(BasePaths):
         for path in paths:
             self.append(path)
 
-        logger.log(
-            level=Settings.LOG_DEV_LEVEL,
-            msg=f"{EdgePaths.log_prefix}: Init'd {type(self)} @{hex(id(self))} "
+        self._log(
+            level=Settings.LOG_DEV,
+            msg=f"Init'd {type(self)} @{hex(id(self))} "
             f"with {len(self)} paths",
         )
 
@@ -310,7 +347,7 @@ class EdgePaths(BasePaths):
         if len(path) > 1:
             logger.log(
                 level=Settings.LOG_DEV_LEVEL,
-                msg=f"{EdgePaths.log_prefix}: Going to expand node path {path}",
+                msg=f"Going to expand node path {path}",
             )
             if edge_paths := EdgePaths.expand_node_path(
                 all_edge_paths=EdgePaths(paths=[]),
@@ -338,9 +375,9 @@ class NodePath(BasePath):
         self.node_protecting: bool = False
         self.edge_paths: EdgePaths = EdgePaths()
         self.path_type: Type[Node] = Node
-        logger.log(
-            level=Settings.LOG_DEV_LEVEL,
-            msg=f"{NodePath.log_prefix}: Init'd {type(self)} @{hex(id(self))} with "
+        self._log(
+            level=Settings.LOG_DEV,
+            msg=f"Init'd {type(self)} @{hex(id(self))} with "
             f"{len(self)} paths",
         )
 
@@ -503,9 +540,9 @@ class NodePaths(BasePaths):
     def __init__(self: NodePaths, paths: list[NodePath] = []) -> None:
         self.paths: list[NodePath] = paths
 
-        logger.log(
-            level=Settings.LOG_DEV_LEVEL,
-            msg=f"{NodePaths.log_prefix}: Init'd {type(self)} @{hex(id(self))} "
+        self._log(
+            level=Settings.LOG_DEV,
+            msg=f"Init'd {type(self)} @{hex(id(self))} "
             f"with {len(self)} paths",
         )
 
@@ -560,8 +597,11 @@ class NodePaths(BasePaths):
 
         :rtype: list
         """
-
-        return [path[1] for path in self.get_lowest_weighted_paths()]
+        nodes = [path[1] for path in self.get_lowest_weighted_paths()]
+        self._log(
+            level=Settings.LOG_DEV, msg=f"Returning first hop nodes: {nodes}"
+        )
+        return nodes
 
     def get_lowest_path_weight(self: NodePaths) -> int:
         """
@@ -623,9 +663,7 @@ class NodePaths(BasePaths):
             return self.paths[0].get_target()
         return None
 
-    def validate_endpoints(
-        self: NodePaths, source: Node, target: Node
-    ) -> None:
+    def validate_endpoints(self: NodePaths, source: Node, target: Node) -> None:
         """
         Confirm that the source and target nodes are the same as the source and
         target nodes which this NodePaths object represents paths between

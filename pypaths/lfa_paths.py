@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import logging
-import typing
-
 from .all_paths import AllPaths
-from .spf_paths import SpfPaths
 from .node import Node
 from .path import NodePath, NodePaths
 from .settings import Settings
+from .spf_paths import SpfPaths
 from .topology import Topology
-
-logger = logging.getLogger(__name__)
 
 
 class LfaPaths(AllPaths):
@@ -42,8 +37,9 @@ class LfaPaths(AllPaths):
         """
 
         lfa_paths: NodePaths = NodePaths(paths=[])
-        logger.debug(
-            f"{self.log_prefix}: Finding paths from {source} to {target}"
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculating paths from {source} to {target}",
         )
 
         if not (
@@ -61,10 +57,11 @@ class LfaPaths(AllPaths):
 
             # This nei is the next-hop for the current best path(s)
             if nei in source_target_paths.get_first_hop_nodes():
-                logger.debug(
-                    f"{self.log_prefix}: Rejected paths via {nei}, it is a "
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"Rejected paths via {nei}, it is a "
                     f"next-hop in the current best path(s):\n"
-                    f"{source_target_paths}"
+                    f"{source_target_paths}",
                 )
                 continue
 
@@ -110,10 +107,9 @@ class LfaPaths(AllPaths):
                 # There isn't connectivity between the nodes; source, target, nh, nei
                 continue
 
-            logger.log(
-                level=Settings.LOG_DEV_LEVEL,
-                msg=f"{self.log_prefix}:\n"
-                f"{nei} -> {target}: {nei_target_cost}\n"
+            self._log(
+                level=Settings.LOG_DEV,
+                msg=f"{nei} -> {target}: {nei_target_cost}\n"
                 f"{nei} -> {source}: {nei_source_cost}\n"
                 f"{source} -> {target}: {source_target_cost}\n"
                 f"{nei} -> {nh}: {nei_nh_cost}\n"
@@ -140,10 +136,11 @@ class LfaPaths(AllPaths):
             if nei_target_cost < (nei_source_cost + source_target_cost):
                 # nei protects src against link failure to next-hop toward dst
                 link_prot = True
-                logger.debug(
-                    f"{self.log_prefix}: {nei} to {target} < ({nei} to {source}"
+                self._log(
+                    level=Settings.LOG_DEV,
+                    msg=f"{nei} to {target} < ({nei} to {source}"
                     f") + ({source} to {target}), {nei_target_cost} < "
-                    f"{nei_source_cost + source_target_cost}"
+                    f"{nei_source_cost + source_target_cost}",
                 )
 
             """
@@ -164,9 +161,10 @@ class LfaPaths(AllPaths):
             if nei_target_cost < (source_target_cost):
                 # nei protects src against failure of link or node toward dst
                 down_prot = True
-                logger.debug(
-                    f"{self.log_prefix}: {nei} to {target} < {source} to "
-                    f"{target}: {nei_target_cost} < {nei_source_cost}"
+                self._log(
+                    level=Settings.LOG_DEV,
+                    msg=f"{nei} to {target} < {source} to "
+                    f"{target}: {nei_target_cost} < {nei_source_cost}",
                 )
 
             """
@@ -185,10 +183,11 @@ class LfaPaths(AllPaths):
             if nei_target_cost < (nei_nh_cost + nh_target_cost):
                 # nei protects src against next-hop node failure toward dst
                 node_prot = True
-                logger.debug(
-                    f"{self.log_prefix}: {nei} to {target} < ({nei} to {nh} + "
+                self._log(
+                    level=Settings.LOG_DEV,
+                    msg=f"{nei} to {target} < ({nei} to {nh} + "
                     f"{nh} to {source}), {nei_target_cost} < "
-                    f"{nei_nh_cost + nh_target_cost}"
+                    f"{nei_nh_cost + nh_target_cost}",
                 )
 
             # nei might have multiple equal-cost best paths to target
@@ -202,22 +201,26 @@ class LfaPaths(AllPaths):
             for nei_target_path in nei_target_paths:
                 # Prepend source to nei_target_path to create full LFA path
                 lfa_path = NodePath(path=[source] + list(nei_target_path))
-                logger.debug(f"{self.log_prefix}: Candidate path: {lfa_path}")
+                self._log(
+                    level=Settings.LOG_DEBUG, msg=f"Candidate path: {lfa_path}"
+                )
                 if link_prot:
                     lfa_path.set_link_protecting(True)
                     lfa_paths.append(lfa_path)
-                    logger.debug(
-                        f"{self.log_prefix}: New link protecting path from "
+                    self._log(
+                        level=Settings.LOG_DEBUG,
+                        msg=f"New link protecting path from "
                         f"{source} to {target} via {nei}, protects against "
-                        f"link {source}-{nh}: {lfa_path}"
+                        f"link {source}-{nh}: {lfa_path}",
                     )
 
                 if down_prot:
                     lfa_path.set_down_protecting(True)
                     lfa_paths.append(lfa_path)
-                    logger.debug(
-                        f"{self.log_prefix}: New downstream protecting path "
-                        f"from {source} to {target} via {nei}: {lfa_path}"
+                    self._log(
+                        level=Settings.LOG_DEBUG,
+                        msg=f"New downstream protecting path "
+                        f"from {source} to {target} via {nei}: {lfa_path}",
                     )
 
                 if node_prot:
@@ -236,19 +239,21 @@ class LfaPaths(AllPaths):
                         if fh in nei_target_path
                     ]
                     if overlap:
-                        logger.debug(
-                            f"{self.log_prefix}: Path {lfa_path} is not node "
+                        self._log(
+                            level=Settings.LOG_DEBUG,
+                            msg=f"Path {lfa_path} is not node "
                             f"protecting against {overlap} from {source} to "
-                            f"{target}"
+                            f"{target}",
                         )
                         continue
 
                     lfa_path.set_node_protecting(True)
                     lfa_paths.append(lfa_path)
-                    logger.debug(
-                        f"{self.log_prefix}: New node protecting path from "
+                    self._log(
+                        level=Settings.LOG_DEBUG,
+                        msg=f"New node protecting path from "
                         f"{source} to {target} via {nei}, protects against "
-                        f"node {nh}: {lfa_path}"
+                        f"node {nh}: {lfa_path}",
                     )
 
         return lfa_paths
@@ -260,6 +265,11 @@ class LfaPaths(AllPaths):
 
         :rtype: None
         """
+        self._log(
+            level=Settings.LOG_INFO,
+            msg=f"Calculating all paths...",
+        )
+
         self.paths = {}
         for source in self.topology.get_nodes_list():
             self.paths[source] = {}
@@ -271,4 +281,4 @@ class LfaPaths(AllPaths):
                     target=target,
                 )
 
-        logger.info(f"{self.log_prefix}: Calculated {len(self)} paths")
+        self._log(level=Settings.LOG_INFO, msg=f"Calculated {len(self)} paths")

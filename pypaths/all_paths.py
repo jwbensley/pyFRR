@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 from .node import Node
 from .path import NodePath, NodePaths
+from .settings import Settings
 from .topology import Topology
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,21 @@ class AllPaths:
             for target in paths_from_source:
                 count += len(paths_from_source[target])
         return count
+
+    def _log(self: AllPaths, level: str, msg: str) -> None:
+        """
+        Issue a log message with this classes specific log prefix
+        """
+        match level:
+            case Settings.LOG_INFO:
+                logger.info(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEBUG:
+                logger.debug(f"{self.log_prefix}: {msg}")
+            case Settings.LOG_DEV:
+                logger.log(
+                    level=Settings.LOG_DEV_LEVEL,
+                    msg=f"{self.log_prefix}: {msg}",
+                )
 
     def calculate_nodepaths(
         self: AllPaths,
@@ -95,6 +110,9 @@ class AllPaths:
 
         :rtype: None
         """
+
+        self._log(level=Settings.LOG_INFO, msg="Calculating all paths...")
+
         self.delete_paths()
         for source in self.topology.get_nodes_list():
             for target in self.topology.get_nodes_list():
@@ -111,7 +129,7 @@ class AllPaths:
                     target=target,
                 )
 
-        logger.info(f"{AllPaths.log_prefix}: Calculated {len(self)} paths")
+        self._log(level=Settings.LOG_INFO, msg=f"Calculated {len(self)} paths")
 
     def delete_paths(self: AllPaths) -> None:
         """
@@ -120,6 +138,7 @@ class AllPaths:
         :rtype: None
         """
         self.paths = {}
+        self._log(level=Settings.LOG_DEBUG, msg="Deleted all paths")
 
     def get_paths_between(
         self: AllPaths, source: Node, target: Node
@@ -131,6 +150,11 @@ class AllPaths:
         :param Node target: Target of the NodePaths obj to return
         :rtype: NodePaths
         """
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Getting all paths between {source} and {target}",
+        )
+
         if source not in self.get_sources():
             return NodePaths(paths=[])
 
@@ -149,6 +173,11 @@ class AllPaths:
         :param str target: Target of the NodePaths obj to return
         :rtype: NodePaths
         """
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Getting all paths between {source} and {target}",
+        )
+
         source_node: Node = self.topology.get_node(source)
         target_node: Node = self.topology.get_node(target)
         return self.get_paths_between(source_node, target_node)
@@ -160,6 +189,11 @@ class AllPaths:
         :param Node source: Source node to return NodePaths for
         :rtype: dict
         """
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Getting all paths from {source}",
+        )
+
         if source not in self.get_sources():
             return {}
         return self.paths[source]

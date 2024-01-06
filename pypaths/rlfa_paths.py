@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import logging
-import typing
-
 from .all_paths import AllPaths
-from .spf_paths import SpfPaths
 from .node import Node
 from .path import NodePath, NodePaths
 from .settings import Settings
+from .spf_paths import SpfPaths
 from .topology import Topology
-
-logger = logging.getLogger(__name__)
 
 
 class RlfaPaths(AllPaths):
@@ -48,6 +43,11 @@ class RlfaPaths(AllPaths):
         :return rlfas_link: List of tuples of each equal cost rLFA to target
         :rtype: list
         """
+
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculatng rLFA link protecting paths from {source} to {target}",
+        )
 
         """
         :param str dst: Destination node name in "graph"
@@ -147,10 +147,10 @@ class RlfaPaths(AllPaths):
                         pq_target_path: NodePath
                         for pq_target_path in pq_target_paths:
                             if source_pq_hop in pq_target_path[1:]:
-                                logger.debug(
-                                    f"{self.log_prefix}: Skipping trombone "
-                                    f"link rLFA "
-                                    f"{(source_pq_path,pq_target_path)}"
+                                self._log(
+                                    level=Settings.LOG_DEBUG,
+                                    msg=f"Skipping trombone link rLFA "
+                                    f"{(source_pq_path,pq_target_path)}",
                                 )
                                 skip = True
                                 break
@@ -172,9 +172,9 @@ class RlfaPaths(AllPaths):
                     backup_path.set_link_protecting(True)
                     paths.append(backup_path)
 
-        logger.debug(
-            f"{self.log_prefix}: Link rLFA paths from {source} to {target}:\n"
-            f"{paths}"
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Link rLFA paths from {source} to {target}: {paths}",
         )
         return paths
 
@@ -194,6 +194,11 @@ class RlfaPaths(AllPaths):
         :param Node target: Target node in the topology
         :rtype: NodePaths
         """
+
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculatng rLFA node paths from {source} to {target}",
+        )
 
         """
         def gen_metric_paths_node(self, dst, graph, rlfas_link, src):
@@ -290,11 +295,11 @@ class RlfaPaths(AllPaths):
                 if source_target_fh in pq_target_path
             ]
             if overlap:
-                logger.debug(
-                    f"{self.log_prefix}: rLFA path "
-                    f"{(source_pq_paths, pq_target_paths)} is not node "
-                    f"protecting against {overlap} from {source} to "
-                    f"{target}"
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"rLFA path {(source_pq_paths, pq_target_paths)} is not "
+                    f"node  protecting against {overlap} from {source} to "
+                    f"{target}",
                 )
             else:
                 # If trumboning is disabled, check if this is a tumbone path:
@@ -307,10 +312,10 @@ class RlfaPaths(AllPaths):
                             pq_target_path: NodePath
                             for pq_target_path in pq_target_paths:
                                 if source_pq_hop in pq_target_path[1:]:
-                                    logger.debug(
-                                        f"{self.log_prefix}: Skipping trombone "
-                                        f"node rLFA "
-                                        f"{(source_pq_path, pq_target_path)}"
+                                    self._log(
+                                        level=Settings.LOG_DEBUG,
+                                        msg=f"Skipping trombone node rLFA "
+                                        f"{(source_pq_path, pq_target_path)}",
                                     )
                                     skip = True
                                     break
@@ -327,9 +332,9 @@ class RlfaPaths(AllPaths):
                         backup_path.set_link_protecting(True)
                         paths.append(backup_path)
 
-        logger.debug(
-            f"{self.log_prefix}: Link rLFA paths from {source} to {target}:\n"
-            f"{paths}"
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Link rLFA paths from {source} to {target}: {paths}",
         )
         return paths
 
@@ -340,6 +345,8 @@ class RlfaPaths(AllPaths):
 
         :rtype: None
         """
+        self._log(level=Settings.LOG_INFO, msg="Calculating all paths...")
+
         self.paths = {}
         for source in self.topology.get_nodes_list():
             self.paths[source] = {}
@@ -351,24 +358,26 @@ class RlfaPaths(AllPaths):
                     target=target,
                 )
 
-        logger.info(f"{self.log_prefix}: Calculated {len(self)} paths")
+        self._log(level=Settings.LOG_INFO, msg=f"Calculated {len(self)} paths")
 
     def calculate_rlfa_paths(
         self: RlfaPaths, source: Node, target: Node
     ) -> NodePaths:
         """
-        Return a NodePaths obj of link and node protecting paths from source to targe
+        Return a NodePaths obj of link and node protecting paths,
+        from source to target.
+
+        :param Node source: Source node in the topology
+        :param Node target: Target node in the topology
+        :rtype: NodePaths
         """
 
-        """
-        rlfas = {
-            "rlfas_link": [],
-            "rlfas_node": []
-        }
-        
-        if self.debug > 0:
-            print(f"Calculating rLFA paths from {src} to {dst}")
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculating rLFA paths from {source} to {target}",
+        )
 
+        """
         s_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=src)
         # There are no paths between this src,dst pair
         if not s_d_paths:
@@ -405,18 +414,15 @@ class RlfaPaths(AllPaths):
             print(f"rlfas_node: {rlfas_node}")
         """
 
+        q_space = self.gen_q_space(source=source, target=target)
+
         if self.ep_space:
             ep_space = self.gen_ep_space(source=source, target=target)
+            pq_nodes = self.gen_pq_nodes(ep_space=ep_space, q_space=q_space)
         else:
             p_space = self.gen_p_space(
                 root=source, source=source, target=target
             )
-
-        q_space = self.gen_q_space(source=source, target=target)
-
-        if self.ep_space:
-            pq_nodes = self.gen_pq_nodes(ep_space=ep_space, q_space=q_space)
-        else:
             pq_nodes = self.gen_pq_nodes(ep_space=p_space, q_space=q_space)
 
         rlfa_paths = self.calculate_linkpaths(
@@ -431,9 +437,7 @@ class RlfaPaths(AllPaths):
 
         return rlfa_paths
 
-    def gen_ep_space(
-        self: RlfaPaths, source: Node, target: Node
-    ) -> list[Node]:
+    def gen_ep_space(self: RlfaPaths, source: Node, target: Node) -> list[Node]:
         """
         Return a list of nodes in source's Extended P-space.
 
@@ -442,6 +446,10 @@ class RlfaPaths(AllPaths):
         :return ep_space: Nodes in sources's EP-space with respect to S-E
         :rtype: list
         """
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculating EP-space from {source} to {target}",
+        )
 
         """
         RFC7490:
@@ -520,14 +528,17 @@ class RlfaPaths(AllPaths):
                 if nei_pnode_cost < (
                     nei_source_cost + source_target_cost + target_pnode_cost
                 ):
-                    logger.debug(
-                        f"{self.log_prefix}: EP-space {nei}: {nei_pnode_cost}<"
-                        f"({nei_source_cost} + {source_target_cost} + "
-                        f"{target_pnode_cost})"
+                    self._log(
+                        level=Settings.LOG_DEBUG,
+                        msg=f"EP-space for {source}: adding "
+                        f"{nei} {nei_pnode_cost} < ({nei_source_cost} + "
+                        f"{source_target_cost} + {target_pnode_cost})",
                     )
                     ep_space.add(pnode)
 
-        logger.debug(f"{self.log_prefix}: EP-space for {source}:\n{ep_space}")
+        self._log(
+            level=Settings.LOG_DEBUG, msg=f"EP-space for {source}: {ep_space}"
+        )
         return list(ep_space)
 
     def gen_p_space(
@@ -549,6 +560,11 @@ class RlfaPaths(AllPaths):
         :rtype: list
         """
 
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculating P-space for {root} no via {source} to {target}",
+        )
+
         """
         RFC7490:
         P-space
@@ -568,42 +584,29 @@ class RlfaPaths(AllPaths):
 
         """
         Find the cost of the lowest cost first-hop from all the best paths
-        towards dst, and build a list of all first-hops toward dst. When ECMP
-        is used in the pre-convergence state, the rLFA remote tunnel endpoint
-        (p) must not be a first-hop along another of the ECMP paths.
+        towards the target node, and build a list of all first-hops toward target.
+        When ECMP is used in the pre-convergence state, the rLFA remote tunnel
+        endpoint (p) must not be a first-hop along another of the ECMP paths.
         """
-        """
-        r_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=root)
-        fh_cost = 0
-        fh_nodes = []
-        for path in r_d_paths:
-            cost = graph.edges[path[0], path[1]]["weight"]
-            if fh_cost == 0:
-                fh_cost = cost
-            elif cost < fh_cost:
-                fh_cost = cost
-            fh_nodes.append(path[1])
+        print(f"Source to target:")
+        print(self.spf_paths.get_paths_between(source=source, target=target))
+        print(f"Root to target:")
+        print(self.spf_paths.get_paths_between(source=root, target=target))
 
-        r_p_costs = {}
-        fh_p_costs = {}
-        for p in graph.nodes:
-            if p == dst or p == root:
-                continue
-        """
         root_target_paths = self.spf_paths.get_paths_between(
-            source=source, target=target
+            source=root, target=target
         )
         if not root_target_paths:
-            logger.debug(f"{self.log_prefix}: {root}'s P-space is empty")
+            self._log(
+                level=Settings.LOG_DEBUG, msg=f"{root}'s P-space is empty"
+            )
             return p_space
 
-        first_hop_cost = root_target_paths.get_lowest_path_weight()
-        first_hop_nodes = root_target_paths.get_first_hop_nodes()
-
+        root_target_fh_nodes = root_target_paths.get_first_hop_nodes()
         root_pnode_costs = {}
         fh_pnode_costs: dict[Node, list] = {}
         for pnode in self.topology.get_nodes_list():
-            if pnode == root or pnode == target:
+            if pnode in [root, source, target]:
                 continue
 
             """
@@ -611,70 +614,58 @@ class RlfaPaths(AllPaths):
             ...excising the subtree reached via the link S-E (including those
             routers that are members of an ECMP that includes link S-E).
             """
-            """
-            p_d_paths = self.spf.gen_metric_paths(dst=dst, graph=graph, src=p)
-            if src in [src for path in p_d_paths if src in path[1:]]:
-                if self.debug > 1:
-                    print(
-                        f"Skipping node {p} with {src} in it's best path(s) "
-                        f"toward {dst}: {p_d_paths}"
-                    )
+            if not (
+                pnode_target_paths := self.spf_paths.get_paths_between(
+                    source=pnode, target=target
+                )
+            ):
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"No path from {pnode} to {target}",
+                )
                 continue
 
-            r_p_costs[p] = self.spf.gen_metric_cost(
-                dst=p, graph=graph, src=root
+            """
+            Check if source is a hop in any P-node-to-target paths
+            """
+            self._log(
+                level=Settings.LOG_DEBUG,
+                msg=f"Checking if {pnode} to {target} is via {source}",
             )
-
-            fh_p_costs[p] = []
-            for fh in fh_nodes:
-                fh_p_costs[p].append(
-                    self.spf.gen_metric_cost(dst=p, graph=graph, src=fh)
-                )
-            """
-            pnode_target_paths = self.spf_paths.get_paths_between(
-                source=pnode, target=target
-            )
-            """
-            Check if source is a hop in any P-node to target paths, but not
-            the start of the path, because that would exclude paths where source
-            has a direct connect to the P-node:
-            """
             if source in [
-                source for path in pnode_target_paths if source in path[1:]
+                source for path in pnode_target_paths if source in path
             ]:
-                logger.debug(
-                    f"{self.log_prefix}: Skipping node {pnode} with {source} in it's best path(s) "
-                    f"toward {target}: {pnode_target_paths}"
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"Skipping node {pnode} with {source} "
+                    f"in it's best path(s) toward {target}:\n"
+                    f"{pnode_target_paths}",
                 )
                 continue
 
+            self._log(
+                level=Settings.LOG_DEBUG, msg=f"{pnode} is a candidate pnode"
+            )
             root_pnode_costs[pnode] = self.spf_paths.get_path_cost_between(
                 source=root, target=pnode
             )
 
             fh_pnode_costs[pnode] = []
-            for first_hop in first_hop_nodes:
+            for root_target_fh in root_target_fh_nodes:
+                if root_target_fh == pnode:
+                    continue  # ????????????????????????????????????????????????????????????????????????
                 fh_pnode_costs[pnode].append(
                     self.spf_paths.get_path_cost_between(
-                        source=first_hop, target=pnode
+                        source=root_target_fh, target=pnode
                     )
                 )
+
+        root_target_fh_cost = root_target_paths.get_lowest_path_weight()
         for pnode in root_pnode_costs:
-            ###for p in r_p_costs:
             """
-            Because this function is used calcualte both the P-Space for src
+            Because this function is used calculate both the P-Space for src
             and the EP-space of src's neighbours, in the later case a neighbour
             of src may choose a P node which is via the S-E link
-            """
-            """
-            s_p_paths = self.spf.gen_metric_paths(dst=p, graph=graph, src=src)
-            if dst in [dst for path in s_p_paths if dst in path]:
-                if self.debug > 1:
-                    print(
-                        f"Skipping node {p} with {dst} in the best path(s) "
-                        f"from {src} to {p}: {s_p_paths}"
-                    )
-                continue
             """
             source_pnode_paths = self.spf_paths.get_paths_between(
                 source=source, target=pnode
@@ -682,10 +673,11 @@ class RlfaPaths(AllPaths):
             if target in [
                 target for path in source_pnode_paths if target in path
             ]:
-                logger.debug(
-                    f"{self.log_prefix}: Skipping node {pnode} with target "
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"Skipping node {pnode} with target "
                     f"{target} in the best path(s) from {source} to {pnode}: "
-                    f"{source_pnode_paths}"
+                    f"{source_pnode_paths}",
                 )
                 continue
 
@@ -695,25 +687,20 @@ class RlfaPaths(AllPaths):
             the shortest path cost S->P is strictly less than the shortest path
             cost S->E->P.
             """
-            """
-            if self.debug > 1:
-                print(
-                    f"p-space {p}: {r_p_costs[p]} < "
-                    f"({fh_cost} + {min(fh_p_costs[p])})?"
-                )
-            if r_p_costs[p] < (fh_cost + min(fh_p_costs[p])):
-                p_space.append(p)
-            """
             if root_pnode_costs[pnode] < (
-                first_hop_cost + min(fh_pnode_costs[pnode])
+                root_target_fh_cost + min(fh_pnode_costs[pnode])
             ):
-                logger.debug(
-                    f"{self.log_prefix}: P-space {pnode}: {root_pnode_costs[pnode]}"
-                    f"<({first_hop_cost} + {fh_pnode_costs[pnode]})"
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"P-space for {root}: adding {pnode}: "
+                    f"{root_pnode_costs[pnode]}<({root_target_fh_cost} + "
+                    f"{min(fh_pnode_costs[pnode])})",
                 )
                 p_space.append(pnode)
 
-        logger.debug(f"{self.log_prefix}: P-space for {root}:\n{p_space}")
+        self._log(
+            level=Settings.LOG_DEBUG, msg=f"P-space for {root}: {p_space}"
+        )
         return p_space
 
     def gen_pq_nodes(
@@ -740,7 +727,7 @@ class RlfaPaths(AllPaths):
         to reach them (if multiple are tied).
         """
         pq_nodes = [node for node in ep_space if node in q_space]
-        logger.debug(f"{self.log_prefix}: PQ-nodes:\n{pq_nodes}")
+        self._log(level=Settings.LOG_DEBUG, msg=f"PQ-nodes: {pq_nodes}")
         return pq_nodes
 
     def gen_q_space(self: RlfaPaths, source: Node, target: Node) -> list:
@@ -752,6 +739,10 @@ class RlfaPaths(AllPaths):
         :return q_space: List of nodes in targets's Q-space with respect to S-E
         :rtype: list
         """
+        self._log(
+            level=Settings.LOG_DEBUG,
+            msg=f"Calculating Q-space from {source} to {target}",
+        )
 
         """
         RFC7490:
@@ -771,26 +762,6 @@ class RlfaPaths(AllPaths):
         the shortest path cost Q<-E is strictly less than the shortest path
         cost Q<-S<-E.
         """
-
-        """
-        q_space = []
-        s_d_cost = self.spf.gen_metric_cost(dst=dst, graph=graph, src=src)
-
-        for node in graph.nodes:
-            if node == src or node == dst:
-                continue
-
-            n_d_cost = self.spf.gen_metric_cost(dst=dst, graph=graph, src=node)
-            n_s_cost = self.spf.gen_metric_cost(dst=src, graph=graph, src=node)
-
-            if self.debug > 1:
-                print(
-                    f"q-space {node}: {n_d_cost} < ({n_s_cost} + {s_d_cost})?"
-                )
-            if n_d_cost < (n_s_cost + s_d_cost):
-                q_space.append(node)
-        """
-
         q_space: list[Node] = []
         source_target_cost = self.spf_paths.get_path_cost_between(
             source=source, target=target
@@ -808,11 +779,15 @@ class RlfaPaths(AllPaths):
             )
 
             if node_target_cost < (node_source_cost + source_target_cost):
-                logger.debug(
-                    f"{self.log_prefix}: Q-space {node}: {node_target_cost} < "
-                    f"({node_source_cost} + {source_target_cost})"
+                self._log(
+                    level=Settings.LOG_DEBUG,
+                    msg=f"Q-space for {source}: adding {node} "
+                    f"{node_target_cost} < ({node_source_cost} + "
+                    f"{source_target_cost})",
                 )
                 q_space.append(node)
 
-        logger.debug(f"{self.log_prefix}: Q-space for {source}:\n{q_space}")
+        self._log(
+            level=Settings.LOG_DEBUG, msg=f"Q-space for {source}: {q_space}"
+        )
         return q_space

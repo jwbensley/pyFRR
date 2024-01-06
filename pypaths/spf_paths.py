@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import logging
-import typing
-
 from .all_paths import AllPaths
 from .path import Node
+from .settings import Settings
 from .topology import Topology
-
-logger = logging.getLogger(__name__)
 
 
 class SpfPaths(AllPaths):
@@ -32,6 +28,11 @@ class SpfPaths(AllPaths):
 
         :rtype: None
         """
+        self._log(
+            level=Settings.LOG_INFO,
+            msg=f"Calculating all paths...",
+        )
+
         self.paths = {}
         for source in self.topology.get_nodes_list():
             self.paths[source] = {}
@@ -42,7 +43,10 @@ class SpfPaths(AllPaths):
                     source, target
                 ).get_lowest_weighted_paths()
 
-        logger.info(f"{SpfPaths.log_prefix}: Calculated {len(self)} paths")
+        self._log(
+            level=Settings.LOG_INFO,
+            msg=f"Calculated {len(self)} paths",
+        )
 
     def get_path_cost_between(
         self: SpfPaths, source: Node, target: Node

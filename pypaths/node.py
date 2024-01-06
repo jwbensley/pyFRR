@@ -134,6 +134,9 @@ class Node:
             )
         self.node_sid = node_sid
 
+    def __repr__(self: Node) -> str:
+        return self.__str__()
+
     def __str__(self: Node) -> str:
         return self.name
 
@@ -158,7 +161,7 @@ class Node:
         :param Node neighbour: New neighbour to add
         :rtype: None
         """
-        if neighbour not in self.neighbours:
+        if neighbour not in self.neighbours and neighbour != self:
             self.neighbours.append(neighbour)
 
     def edges_to_list(self: Node) -> list[dict]:

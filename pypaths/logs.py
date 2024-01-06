@@ -17,7 +17,7 @@ class Logs:
         os.makedirs(os.path.dirname(Settings.LOG_DIR), exist_ok=True)
         if Settings.DEV:
             logging.basicConfig(
-                format=Settings.LOG_DEV,
+                format=Settings.LOG_FORMAT_DEV,
                 level=Settings.LOG_DEV_LEVEL,
                 handlers=[
                     logging.FileHandler(
@@ -28,7 +28,7 @@ class Logs:
             )
         elif Settings.DEBUG:
             logging.basicConfig(
-                format=Settings.LOG_DEBUG,
+                format=Settings.LOG_FORMAT_DEBUG,
                 level=logging.DEBUG,
                 handlers=[
                     logging.FileHandler(
@@ -39,7 +39,7 @@ class Logs:
             )
         else:
             logging.basicConfig(
-                format=Settings.LOG_INFO,
+                format=Settings.LOG_FORMAT_INFO,
                 level=logging.INFO,
                 handlers=[
                     logging.FileHandler(

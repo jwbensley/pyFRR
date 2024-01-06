@@ -22,21 +22,26 @@ class Settings:
     LOG_MODE: str = "a"
 
     # Standard logging format
-    LOG_INFO: str = "%(asctime)s|%(levelname)s|%(message)s"
+    LOG_FORMAT_INFO: str = "%(asctime)s|%(levelname)s|%(message)s"
 
     # Debugging logging formart
-    LOG_DEBUG: str = (
+    LOG_FORMAT_DEBUG: str = (
         "%(asctime)s|%(levelname)s|%(process)d|%(funcName)s|%(message)s"
     )
 
-    # Ded logging level
-    LOG_DEV_LEVEL: int = 5
-
     # Dev logging format
-    LOG_DEV: str = (
+    LOG_FORMAT_DEV: str = (
         "%(asctime)s|%(levelname)s|%(process)d|%(funcName)s|%(lineno)d|"
         "%(message)s"
     )
+
+    # Dev logging level - custom logging level for more granularity
+    LOG_DEV_LEVEL: int = 5
+
+    # Logging levels
+    LOG_INFO = "info"
+    LOG_DEBUG = "debug"
+    LOG_DEV = "dev"
 
     # Log file
     LOG_DIR: str = os.path.join(BASE_DIR, "pypaths.log")
