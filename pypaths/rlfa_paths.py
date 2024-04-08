@@ -437,7 +437,9 @@ class RlfaPaths(AllPaths):
 
         return rlfa_paths
 
-    def gen_ep_space(self: RlfaPaths, source: Node, target: Node) -> list[Node]:
+    def gen_ep_space(
+        self: RlfaPaths, source: Node, target: Node
+    ) -> list[Node]:
         """
         Return a list of nodes in source's Extended P-space.
 
