@@ -1,2 +1,8 @@
-__pycache__/
 diagrams/
+.mypy_cache/
+__pycache__/
+pypaths/pypaths.log
+.pytest_cache/
+.tox
+.venv/
+venv/

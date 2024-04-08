@@ -7,7 +7,7 @@ import argparse
 import pprint
 import sys
 sys.path.append('./')
-from pyfrr import pyfrr
+from old.pyfrr import pyfrr
 
 
 # Example topology
